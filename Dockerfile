@@ -6,14 +6,14 @@ RUN npm ci
 COPY frontend/ ./
 RUN npm run build
 
-FROM python:3.12-slim-bookworm AS dependencies
+FROM python:3.14-slim-bookworm AS dependencies
 COPY --from=ghcr.io/astral-sh/uv:0.9.26 /uv /usr/local/bin/uv
 WORKDIR /app
 ENV UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=never
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --extra ml --no-editable
 
-FROM python:3.12-slim-bookworm AS runtime
+FROM python:3.14-slim-bookworm AS runtime
 LABEL org.opencontainers.image.source="https://github.com/gcode-de/aid-project-risk-screening"
 LABEL org.opencontainers.image.description="Aid-project screening prototype with explicit demo and model modes"
 WORKDIR /app
