@@ -1,0 +1,16 @@
+**/.git
+**/.venv
+**/node_modules
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+**/dist
+**/test-results
+**/playwright-report
+**/.env*
+**/*.csv
+**/*.pdf
+**/*.joblib
+**/*.pkl
+**/*.tsbuildinfo
+backend/tests

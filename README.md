@@ -1,11 +1,33 @@
 # Aid Project Risk Screening
 
+[![Verify and publish](https://github.com/gcode-de/aid-project-risk-screening/actions/workflows/ci.yml/badge.svg)](https://github.com/gcode-de/aid-project-risk-screening/actions/workflows/ci.yml)
+
 A focused portfolio project: React + TypeScript, FastAPI, and an explicit boundary for
 trained models. The German interface supports a short presentation of project screening.
 There is no database and no submitted input is persisted.
 
-**Status:** API and React interface implemented. No trained model is included. Demo mode uses fixed,
+**Status:** Responsive web app, tested container and delivery workflow implemented. No trained model is included. Demo mode uses fixed,
 clearly labelled illustrative numbers, never claimed to be analytical findings.
+
+![Desktop demonstration with explicit fixture values](docs/screenshots/screening-desktop.png)
+
+## Run the complete web app
+
+```sh
+docker build -t aid-screening:local .
+docker run --rm --read-only --cap-drop=ALL --security-opt=no-new-privileges \
+  --tmpfs /tmp:rw,noexec,nosuid,size=64m -p 127.0.0.1:8080:8000 \
+  -e MODEL_MODE=demo aid-screening:local
+```
+
+Open <http://127.0.0.1:8080>. React and FastAPI are served from a single non-root container.
+Country/sector options follow model training coverage (dataset coverage in demo mode).
+CPI is automatically resolved only when a vetted, historically available reference exists;
+otherwise it remains explicitly missing. Manual overrides are optional and labelled.
+
+The delivery path is **tests → container smoke test → Docker Hub → Podman → Cloudflare Tunnel**.
+Registry publication is disabled until credentials are configured. Live deployment is an
+explicit operator step; see the [deployment guide](docs/deployment.md).
 
 ## API development
 
@@ -65,6 +87,8 @@ artifact fails startup; it never falls back to a demo.
 - [Model integration](docs/model-integration.md)
 - [Architecture decision](docs/adr/0001-small-stateless-service.md)
 - [Country coverage and CPI](docs/adr/0003-country-coverage-and-cpi.md)
+- [Deployment and rollback](docs/deployment.md)
+- [Container delivery decision](docs/adr/0002-reviewed-container-delivery.md)
 - [Slice log](docs/slices.md)
 
 Source datasets, the hiring challenge, model binaries and credentials are excluded

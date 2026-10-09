@@ -18,3 +18,6 @@ and push. No source dataset or assessment document is published.
    missing/zero semantics, UI reset and supported-only options. See ADR 0003.
 5. **Delivery** — tested OCI image, GitHub Actions and Docker Hub publication; Podman and
    Cloudflare Tunnel operator guide. Live deployment needs the operator's registry and host.
+   Verification: local image build and non-root/read-only smoke test, plus CI verification
+   and image jobs. Publishing is gated on registry configuration; no live deployment claimed.
+   Current suite: 33 backend tests, 9 component tests, 8 desktop/mobile browser tests.
