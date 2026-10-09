@@ -28,3 +28,6 @@ and push. No source dataset or assessment document is published.
    repository secrets, with optional namespace overrides and explicit missing-secret failure.
    Verification: YAML parsing, full CI and authenticated multi-platform publication.
    Host deployment and automatic update policy still require target discovery and validation.
+8. **Proxmox deployment** — Quadlet unit for LXC 114 with loopback port 4175, boot
+   activation, Podman health watchdog and registry auto-update. Verification: live health
+   endpoint, running service, existing auto-update timer and container status.
