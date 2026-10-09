@@ -64,6 +64,8 @@ class Estimates(BaseModel):
 
 
 class Prediction(BaseModel):
+    model_config = ConfigDict(allow_inf_nan=False)
+
     mode: Literal["demo", "model"]
     model_version: str
     estimates: Estimates

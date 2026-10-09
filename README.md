@@ -43,6 +43,11 @@ Frontend types are generated from FastAPI's OpenAPI schema; regenerate them afte
 changes. Form tests cover submission, missing CPI, stale results, unavailable models,
 network failures and negative cost changes. There are no remotely loaded fonts or assets.
 
+For browser tests, first build the frontend, then run `npx playwright install chromium`
+and `npm run test:e2e` in `frontend/`. Playwright starts the actual FastAPI application,
+checks desktop/mobile flows and runs automated accessibility checks on both views.
+Port 8000 must be free. Screenshots and failure traces appear under `frontend/test-results/`.
+
 | Endpoint | Purpose |
 | --- | --- |
 | `GET /api/health` | Process liveness, independent of model availability |

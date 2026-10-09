@@ -70,7 +70,7 @@ def test_manifest_rejects_wrong_feature_order(model_dir):
         Predictor("model", model_dir)
 
 
-@pytest.mark.parametrize("cost", [np.nan, np.inf, -1.01])
+@pytest.mark.parametrize("cost", [np.nan, np.inf, -1.01, 1e308])
 def test_invalid_model_output_never_reaches_client(model_dir, monkeypatch, cost):
     predictor = Predictor("model", model_dir)
     monkeypatch.setattr(predictor.cost_model, "predict", lambda frame: [cost])
@@ -78,13 +78,22 @@ def test_invalid_model_output_never_reaches_client(model_dir, monkeypatch, cost)
         assert client.post("/api/predict", json=PROJECT).status_code == 503
 
 
-def test_success_class_order_is_not_assumed(model_dir, monkeypatch):
+def test_success_class_order_is_not_assumed(model_dir):
+    path = model_dir / "success_pipeline.joblib"
+    pipeline = joblib.load(path)
+    pipeline.named_steps["model"].classes_ = np.array([1, 0])
+    pipeline.named_steps["model"].class_prior_ = np.array([0.8, 0.2])
+    joblib.dump(pipeline, path)
     predictor = Predictor("model", model_dir)
-    predictor.success_index = 0
-    monkeypatch.setattr(predictor.success_model, "predict_proba", lambda frame: [[0.8, 0.2]])
     with TestClient(create_app(predictor)) as client:
         result = client.post("/api/predict", json=PROJECT).json()
         assert result["estimates"]["success_probability"] == 0.8
+
+
+def test_non_predictor_artifact_fails_startup(model_dir):
+    joblib.dump({"not": "a model"}, model_dir / "cost_pipeline.joblib")
+    with pytest.raises(ValueError, match="Artifacts must implement"):
+        Predictor("model", model_dir)
 
 
 def test_static_frontend_and_missing_assets(tmp_path: Path):

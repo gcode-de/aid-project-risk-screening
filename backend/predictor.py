@@ -55,6 +55,10 @@ class Predictor:
             # Only operator-provided, trusted artifacts: joblib can execute Python code.
             self.success_model = joblib.load(model_dir / "success_pipeline.joblib")
             self.cost_model = joblib.load(model_dir / "cost_pipeline.joblib")
+            if not callable(getattr(self.success_model, "predict_proba", None)) or not callable(
+                getattr(self.cost_model, "predict", None)
+            ):
+                raise ValueError("Artifacts must implement predict_proba and predict")
             classes = list(self.success_model.classes_)
             if len(classes) != 2 or set(classes) != {0, 1}:
                 raise ValueError("Success pipeline must classify 0 and 1")

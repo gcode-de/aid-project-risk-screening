@@ -187,7 +187,7 @@ main {
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 2px;
-  color: #68776e;
+  color: #56664e;
 }
 .page-title h1 {
   font-size: 37px;
@@ -201,7 +201,7 @@ main {
 }
 .intro {
   font-size: 13px;
-  color: #69786e;
+  color: #56664e;
 }
 .version-tag {
   border: 1px solid #d9e0d7;
@@ -209,7 +209,7 @@ main {
   border-radius: 5px;
   font-size: 10px;
   letter-spacing: 1.5px;
-  color: #6a786c;
+  color: #56664e;
 }
 .mode-banner {
   background: #ecf1e5;
@@ -330,7 +330,7 @@ fieldset {
   float: right;
   font-size: 9px;
   font-weight: 400;
-  color: #778372;
+  color: #616d59;
   letter-spacing: 0.5px;
 }
 .help {
@@ -383,7 +383,7 @@ fieldset {
 .form-footnote {
   text-align: center;
   font-size: 9px;
-  color: #73806e;
+  color: #616d59;
   margin-top: 11px;
 }
 .empty-state {
@@ -444,7 +444,7 @@ fieldset {
 }
 .demo-result {
   font-size: 10px;
-  color: #687449;
+  color: #526039;
   background: #f0f4e8;
   padding: 9px 11px;
   border-radius: 5px;
@@ -522,7 +522,7 @@ fieldset {
   border-bottom: 1px solid #edf0e8;
 }
 .note-number {
-  color: #6b8057;
+  color: #526039;
   font-size: 10px;
   padding-top: 2px;
 }
@@ -564,7 +564,7 @@ footer {
   justify-content: space-between;
   gap: 10px;
   font-size: 9px;
-  color: #758170;
+  color: #616d59;
   padding: 24px 0 6px;
 }
 footer > span:last-child {
