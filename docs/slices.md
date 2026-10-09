@@ -21,3 +21,6 @@ and push. No source dataset or assessment document is published.
    Verification: local image build and non-root/read-only smoke test, plus CI verification
    and image jobs. Publishing is gated on registry configuration; no live deployment claimed.
    Current suite: 33 backend tests, 9 component tests, 8 desktop/mobile browser tests.
+6. **CI maintenance** — current SHA-pinned Actions and explicit Ubuntu 24.04 runners.
+   Removes deprecated Node 20 Action runtimes and avoids an unreviewed runner OS migration.
+   Verification: repeat the complete GitHub Actions verification and container smoke test.
