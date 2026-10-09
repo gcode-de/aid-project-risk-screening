@@ -21,6 +21,9 @@ Mount these files read-only at `MODEL_DIR` and set `MODEL_MODE=model`:
   "training_year_max": 2022,
   "budget_min_usd": 1000,
   "budget_max_usd": 200000000,
+  "countries": ["Kenya", "Germany"],
+  "sector_codes": [12230, 12220],
+  "cpi_references": [],
   "metrics": {},
   "limitations": ["Replace with measured validation limits and probability-calibration findings."]
 }
@@ -30,6 +33,20 @@ The dates and budget bounds above illustrate the schema; replace them with actua
 coverage. Metrics belong to a held-out time period; use clear names such as
 `success_brier_score`, `success_failure_recall`, `cost_mae_ratio`. Do not publish invented
 metrics. Declare the success label definition and validation years in `limitations`.
+
+`countries` and `sector_codes` must list only values actually represented in training.
+They populate the UI and are enforced by the API. The demo uses the 12 countries and
+6 sectors in the supplied challenge dataset, not a worldwide country list.
+
+Optional `cpi_references` entries have `country`, `reference_year`, `score`, `source`
+(a verifiable citation) and `available_from` (ISO publication date). Supply only vetted
+references; no references means an explicit missing CPI, handled by the pipeline.
+The server selects the latest reference available on or before the first day of the
+approval month. This conservative cutoff avoids using information published later.
+Training must use the same lookup semantics; never compute reference values from the
+entire training/test dataset. A country is not assigned one timeless CPI score.
+Automatic requests send `cpi_mode: "auto", cpi_score: null`; manual overrides send
+`cpi_mode: "manual"` and a score. Results report the actual score and provenance.
 
 Pipelines receive a one-row pandas DataFrame in the exact column order above. Country is
 English text; DAC sector code is an integer; missing CPI is `NaN`. All encoders, imputers,

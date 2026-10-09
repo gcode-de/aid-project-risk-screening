@@ -4,6 +4,7 @@ export type ProjectInput = components["schemas"]["ProjectInput"];
 export type Prediction = components["schemas"]["Prediction"];
 export type ModelInfo = components["schemas"]["ModelInfo"];
 export type Options = components["schemas"]["Options"];
+export type CpiSelection = components["schemas"]["CpiSelection"];
 
 export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`/api${path}`, {

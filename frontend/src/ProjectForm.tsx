@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Options, ProjectInput } from "./api";
+import CpiField from "./CpiField";
 
 const months = [
   "Januar",
@@ -25,7 +26,11 @@ type Props = {
 };
 
 export default function ProjectForm({ options, busy, ready, onSubmit, onChange }: Props) {
-  const [missingCpi, setMissingCpi] = useState(false);
+  const [country, setCountry] = useState(
+    options.countries.includes("Kenya") ? "Kenya" : options.countries[0],
+  );
+  const [year, setYear] = useState(2024);
+  const [month, setMonth] = useState(12);
   return (
     <form
       onChange={onChange}
@@ -36,7 +41,8 @@ export default function ProjectForm({ options, busy, ready, onSubmit, onChange }
           country: String(data.get("country")) as ProjectInput["country"],
           sector_code: Number(data.get("sector")) as ProjectInput["sector_code"],
           initial_budget_usd: Number(data.get("budget")),
-          cpi_score: missingCpi ? null : Number(data.get("cpi")),
+          cpi_mode: data.get("cpi_mode") === "manual" ? "manual" : "auto",
+          cpi_score: data.get("cpi_mode") === "manual" ? Number(data.get("cpi")) : null,
           approval_month: Number(data.get("month")),
           approval_year: Number(data.get("year")),
         });
@@ -47,7 +53,11 @@ export default function ProjectForm({ options, busy, ready, onSubmit, onChange }
         <div className="fields">
           <label>
             Empfängerland
-            <select name="country" defaultValue="Kenya">
+            <select
+              name="country"
+              value={country}
+              onChange={(event) => setCountry(event.target.value)}
+            >
               {options.countries.map((country) => (
                 <option key={country}>{country}</option>
               ))}
@@ -55,7 +65,10 @@ export default function ProjectForm({ options, busy, ready, onSubmit, onChange }
           </label>
           <label>
             Sektor
-            <select name="sector" defaultValue="12230">
+            <select
+              name="sector"
+              defaultValue={12230 in options.sectors ? "12230" : Object.keys(options.sectors)[0]}
+            >
               {Object.entries(options.sectors).map(([code, label]) => (
                 <option value={code} key={code}>
                   {label}
@@ -78,38 +91,13 @@ export default function ProjectForm({ options, busy, ready, onSubmit, onChange }
               Ursprünglich bewilligter Betrag, ohne spätere Nachfinanzierung.
             </span>
           </label>
-          <div className="wide cpi-field">
-            <label htmlFor="cpi">
-              CPI-Wert <span className="unit">0–100</span>
-            </label>
-            <input
-              id="cpi"
-              name="cpi"
-              type="number"
-              min="0"
-              max="100"
-              step="0.1"
-              defaultValue="32"
-              required={!missingCpi}
-              disabled={missingCpi}
-              aria-describedby="cpi-help"
-            />
-            <label className="checkbox">
-              <input
-                type="checkbox"
-                checked={missingCpi}
-                onChange={(event) => setMissingCpi(event.target.checked)}
-              />{" "}
-              Wert nicht verfügbar
-            </label>
-            <p id="cpi-help" className="help">
-              Korruptionswahrnehmungsindex: höhere Werte bedeuten weniger wahrgenommene Korruption.
-              Kein Urteil über ein einzelnes Projekt.
-            </p>
-          </div>
           <label>
             Genehmigungsmonat
-            <select name="month" defaultValue="12">
+            <select
+              name="month"
+              value={month}
+              onChange={(event) => setMonth(Number(event.target.value))}
+            >
               {months.map((month, index) => (
                 <option key={month} value={index + 1}>
                   {month}
@@ -125,10 +113,17 @@ export default function ProjectForm({ options, busy, ready, onSubmit, onChange }
               min="2000"
               max="2100"
               step="1"
-              defaultValue="2024"
+              value={year || ""}
+              onChange={(event) => setYear(Number(event.target.value))}
               required
             />
           </label>
+          <CpiField
+            key={`${country}:${year}:${month}`}
+            country={country}
+            year={year}
+            month={month}
+          />
         </div>
         <button className="primary" type="submit">
           {busy ? "Prüfung läuft …" : "Projekt prüfen"}

@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import type { ModelInfo, Options, Prediction } from "./api";
+import ProjectForm from "./ProjectForm";
 import ResultPanel from "./ResultPanel";
 
 const info: ModelInfo = {
@@ -14,6 +15,7 @@ const info: ModelInfo = {
 };
 const options: Options = { countries: ["Kenya", "Germany"], sectors: { 12230: "Infrastruktur" } };
 const prediction: Prediction = {
+  cpi: { mode: "auto", score: null, reference_year: null, source: null },
   mode: "demo",
   model_version: "demo-fixture-v1",
   estimates: { success_probability: 0.64, expected_cost_change_ratio: 0.18 },
@@ -30,7 +32,9 @@ beforeEach(() => {
         ? info
         : url.endsWith("options")
           ? options
-          : prediction;
+          : url.includes("cpi-reference")
+            ? prediction.cpi
+            : prediction;
       return new Response(JSON.stringify(body), { status: 200 });
     }),
   );
@@ -38,6 +42,58 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("project screening", () => {
+  it("restricts country choices to the supplied training coverage", async () => {
+    const submit = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <ProjectForm
+        options={{ countries: ["Germany"], sectors: { 12220: "Basisgesundheit" } }}
+        busy={false}
+        ready
+        onSubmit={submit}
+        onChange={() => {}}
+      />,
+    );
+    expect(screen.getByLabelText("Empfängerland")).toHaveValue("Germany");
+    expect(screen.queryByRole("option", { name: "Kenya" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Projekt prüfen" }));
+    expect(submit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        country: "Germany",
+        sector_code: 12220,
+        cpi_score: null,
+        cpi_mode: "auto",
+      }),
+    );
+  });
+
+  it("shows a sourced automatic CPI without sending the preview as a manual score", async () => {
+    vi.mocked(fetch).mockImplementation(
+      async (url) =>
+        new Response(
+          JSON.stringify(
+            String(url).includes("cpi-reference")
+              ? { mode: "auto", score: 31, reference_year: 2023, source: "Fixture source" }
+              : String(url).endsWith("model-info")
+                ? info
+                : String(url).endsWith("options")
+                  ? options
+                  : prediction,
+          ),
+        ),
+    );
+    const user = userEvent.setup();
+    render(<App />);
+    expect(await screen.findByText(/CPI 31 · Referenzjahr 2023 · Fixture source/)).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Projekt prüfen" }));
+    await screen.findByText("Prüfergebnis");
+    const call = vi.mocked(fetch).mock.calls.find(([url]) => url === "/api/predict");
+    expect(JSON.parse(String(call?.[1]?.body))).toMatchObject({
+      cpi_mode: "auto",
+      cpi_score: null,
+    });
+  });
+
   it("labels demo values and submits the API contract", async () => {
     const user = userEvent.setup();
     render(<App />);
@@ -52,21 +108,31 @@ describe("project screening", () => {
       country: "Kenya",
       sector_code: 12230,
       initial_budget_usd: 500_000,
-      cpi_score: 32,
+      cpi_mode: "auto",
+      cpi_score: null,
       approval_month: 12,
       approval_year: 2024,
     });
   });
 
-  it("sends missing CPI as null, not zero", async () => {
+  it("accepts manual CPI zero and resets it when the country changes", async () => {
     const user = userEvent.setup();
     render(<App />);
-    await user.click(await screen.findByLabelText("Wert nicht verfügbar"));
-    expect(screen.getByLabelText(/CPI-Wert/)).toBeDisabled();
+    await user.click(await screen.findByLabelText("CPI manuell eingeben"));
+    await user.type(screen.getByLabelText(/CPI-Wert/), "0");
     await user.click(screen.getByRole("button", { name: "Projekt prüfen" }));
     await screen.findByText("Prüfergebnis");
     const call = vi.mocked(fetch).mock.calls.find(([url]) => url === "/api/predict");
-    expect(JSON.parse(String(call?.[1]?.body)).cpi_score).toBeNull();
+    expect(JSON.parse(String(call?.[1]?.body))).toMatchObject({ cpi_mode: "manual", cpi_score: 0 });
+    await user.selectOptions(screen.getByLabelText("Empfängerland"), "Germany");
+    expect(screen.getByLabelText("CPI manuell eingeben")).not.toBeChecked();
+    expect(screen.queryByLabelText(/CPI-Wert/)).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining("country=Germany"),
+        expect.any(Object),
+      ),
+    );
   });
 
   it("removes stale results when the user edits input", async () => {

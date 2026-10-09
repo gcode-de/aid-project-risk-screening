@@ -5,7 +5,7 @@ test("screens a project through the real FastAPI service", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("Demonstrationsmodus")).toBeVisible();
   await page.getByLabel(/Bewilligtes Budget/).fill("1000000");
-  await page.getByLabel("Wert nicht verfügbar").check();
+  await expect(page.getByText(/Keine geprüfte CPI-Referenz verfügbar/)).toBeVisible();
   await page.getByRole("button", { name: "Projekt prüfen" }).click();
   await expect(page.getByRole("heading", { name: "Prüfergebnis" })).toBeVisible();
   await expect(page.getByText("180.000 $", { exact: true })).toBeVisible();

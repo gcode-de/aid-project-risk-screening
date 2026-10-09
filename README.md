@@ -53,6 +53,7 @@ Port 8000 must be free. Screenshots and failure traces appear under `frontend/te
 | `GET /api/health` | Process liveness, independent of model availability |
 | `GET /api/model-info` | Mode, readiness, version, metrics and limitations |
 | `GET /api/options` | Supported countries and sector mapping |
+| `GET /api/cpi-reference` | Optional, time-aware CPI reference for a supported country |
 | `POST /api/predict` | Validated project input and two separate estimates |
 
 `MODEL_MODE` defaults to `unavailable`. Set `demo` explicitly for a demonstration or
@@ -63,6 +64,7 @@ artifact fails startup; it never falls back to a demo.
 
 - [Model integration](docs/model-integration.md)
 - [Architecture decision](docs/adr/0001-small-stateless-service.md)
+- [Country coverage and CPI](docs/adr/0003-country-coverage-and-cpi.md)
 - [Slice log](docs/slices.md)
 
 Source datasets, the hiring challenge, model binaries and credentials are excluded

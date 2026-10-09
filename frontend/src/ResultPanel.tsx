@@ -98,6 +98,15 @@ export default function ResultPanel({ result }: { result: Prediction | null }) {
       <details className="limitations">
         <summary>Modellstand und Aussagegrenzen</summary>
         <p>Version: {result.model_version}</p>
+        <p>
+          Verwendeter CPI: {result.cpi.score ?? "nicht verfügbar"}
+          {result.cpi.mode === "manual"
+            ? " · manuell eingegeben"
+            : result.cpi.reference_year
+              ? ` · Referenzjahr ${result.cpi.reference_year}`
+              : ""}
+          {result.cpi.source ? ` · ${result.cpi.source}` : ""}
+        </p>
         <ul>
           {result.limitations.map((item) => (
             <li key={item}>{item}</li>

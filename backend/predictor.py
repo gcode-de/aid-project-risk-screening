@@ -1,12 +1,25 @@
 import json
 import math
 import os
+from datetime import date
 from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from backend.schemas import Estimates, ModelInfo, ProjectInput, ReviewNote
+from backend.schemas import (
+    COUNTRIES,
+    SECTORS,
+    Country,
+    CpiReference,
+    CpiSelection,
+    Estimates,
+    ModelInfo,
+    Options,
+    ProjectInput,
+    ReviewNote,
+    SectorCode,
+)
 
 LIMITATION = "Prototyp zur Prüfungsvorbereitung. Keine automatische Förder- oder Auditentscheidung."
 FEATURES = [
@@ -29,6 +42,9 @@ class Manifest(BaseModel):
     training_year_max: int
     budget_min_usd: float = Field(gt=0)
     budget_max_usd: float = Field(gt=0)
+    countries: list[Country] = Field(min_length=1)
+    sector_codes: list[SectorCode] = Field(min_length=1)
+    cpi_references: list[CpiReference] = Field(default_factory=list)
     metrics: dict[str, float]
     limitations: list[str] = Field(min_length=1)
 
@@ -40,6 +56,20 @@ class Manifest(BaseModel):
             raise ValueError("Training years are reversed")
         if self.budget_min_usd > self.budget_max_usd:
             raise ValueError("Training budget bounds are reversed")
+        if len(set(self.countries)) != len(self.countries):
+            raise ValueError("Duplicate countries in manifest")
+        if len(set(self.sector_codes)) != len(self.sector_codes):
+            raise ValueError("Duplicate sectors in manifest")
+        reference_keys = set()
+        for reference in self.cpi_references:
+            if reference.country not in self.countries:
+                raise ValueError("CPI reference country is outside training coverage")
+            if reference.reference_year > reference.available_from.year:
+                raise ValueError("CPI reference cannot be published before its reference year")
+            key = (reference.country, reference.reference_year, reference.available_from)
+            if key in reference_keys:
+                raise ValueError("Ambiguous duplicate CPI reference")
+            reference_keys.add(key)
         return self
 
 
@@ -96,6 +126,47 @@ class Predictor:
     @classmethod
     def from_environment(cls):
         return cls(os.getenv("MODEL_MODE", "unavailable"), Path(os.getenv("MODEL_DIR", "models")))
+
+    def options(self) -> Options:
+        return Options(
+            countries=sorted(self.manifest.countries) if self.manifest else COUNTRIES,
+            sectors={code: SECTORS[code] for code in self.manifest.sector_codes}
+            if self.manifest
+            else SECTORS,
+        )
+
+    def validate_project(self, project: ProjectInput) -> None:
+        if project.country not in self.options().countries:
+            raise ValueError("Für dieses Land enthält das Modell keine Trainingsdaten.")
+        if project.sector_code not in self.options().sectors:
+            raise ValueError("Für diesen Sektor enthält das Modell keine Trainingsdaten.")
+        if project.cpi_mode == "auto" and project.cpi_score is not None:
+            raise ValueError(
+                "Im automatischen Modus wird der CPI ausschließlich serverseitig ermittelt."
+            )
+        if project.cpi_mode == "manual" and project.cpi_score is None:
+            raise ValueError("Für die manuelle CPI-Eingabe ist ein Wert erforderlich.")
+
+    def cpi_reference(self, country: Country, year: int, month: int) -> CpiSelection:
+        if country not in self.options().countries:
+            raise ValueError("Für dieses Land enthält das Modell keine Trainingsdaten.")
+        # Month precision: use only references published by the first day of that month.
+        cutoff = date(year, month, 1)
+        references = (
+            [
+                item
+                for item in self.manifest.cpi_references
+                if item.country == country and item.available_from <= cutoff
+            ]
+            if self.manifest
+            else []
+        )
+        if not references:
+            return CpiSelection()
+        item = max(references, key=lambda item: (item.reference_year, item.available_from))
+        return CpiSelection(
+            score=item.score, reference_year=item.reference_year, source=item.source
+        )
 
     def predict(self, project: ProjectInput) -> Estimates:
         if self.info.mode == "demo":

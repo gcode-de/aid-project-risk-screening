@@ -11,6 +11,7 @@ PROJECT = {
     "sector_code": 12230,
     "initial_budget_usd": 500_000,
     "cpi_score": 32,
+    "cpi_mode": "manual",
     "approval_month": 12,
     "approval_year": 2024,
 }
@@ -58,7 +59,9 @@ def test_rejects_invalid_input(client, field, value):
 
 
 def test_missing_cpi_is_preserved_as_note(client):
-    result = client.post("/api/predict", json={**PROJECT, "cpi_score": None}).json()
+    result = client.post(
+        "/api/predict", json={**PROJECT, "cpi_score": None, "cpi_mode": "auto"}
+    ).json()
     assert "missing-cpi" in [note["code"] for note in result["notes"]]
 
 
@@ -86,3 +89,16 @@ def test_prediction_failure_returns_safe_error(client, monkeypatch):
 
 def test_unknown_api_path_is_not_html(client):
     assert client.get("/api/unknown").status_code == 404
+
+
+@pytest.mark.parametrize(("mode", "score"), [("auto", 32), ("manual", None)])
+def test_cpi_mode_contract_cannot_be_bypassed(client, mode, score):
+    response = client.post("/api/predict", json={**PROJECT, "cpi_mode": mode, "cpi_score": score})
+    assert response.status_code == 422
+
+
+def test_manual_zero_is_not_treated_as_missing(client):
+    result = client.post("/api/predict", json={**PROJECT, "cpi_score": 0}).json()
+    assert result["cpi"]["score"] == 0
+    assert result["cpi"]["mode"] == "manual"
+    assert "missing-cpi" not in [note["code"] for note in result["notes"]]
