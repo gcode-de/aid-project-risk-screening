@@ -27,7 +27,9 @@ For Podman use `CONTAINER_ENGINE=podman sh scripts/smoke-image.sh IMAGE`.
 ## 2. Configure Docker Hub publication
 
 Create a Docker Hub repository named `aid-project-risk-screening` in your namespace.
-In GitHub repository settings, add these **repository variables**:
+Set repository secrets `DOCKERHUB_USER` (your Docker Hub username) and `DOCKERHUB_TOKEN`.
+By default the image is published in that user's namespace. Optional **repository variables**
+override the username or namespace, for example when publishing to an organization:
 
 | Variable | Value |
 | --- | --- |
@@ -38,8 +40,8 @@ Add `DOCKERHUB_TOKEN` as a GitHub Actions secret (repository or `dockerhub` envi
 Use a Docker Hub access token with write permission for this repository. Never commit or
 paste it into source files. The `dockerhub` environment can have required reviewers if desired.
 
-The workflow tests each PR/push, then builds and smoke-tests the image. Publication is skipped
-until the namespace is configured. After configuration, main publishes `main` and an immutable
+The workflow tests each PR/push, then builds and smoke-tests the image. Publication fails with
+a configuration error if credentials are missing. After configuration, main publishes `main` and an immutable
 commit tag `sha-<full-commit>`. Tags such as `v0.1.0` additionally publish `0.1.0`. The publish
 job adds provenance, an SBOM (software inventory), and the final image digest to the run summary.
 

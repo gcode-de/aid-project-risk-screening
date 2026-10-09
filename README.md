@@ -26,7 +26,7 @@ CPI is automatically resolved only when a vetted, historically available referen
 otherwise it remains explicitly missing. Manual overrides are optional and labelled.
 
 The delivery path is **tests → container smoke test → Docker Hub → Podman → Cloudflare Tunnel**.
-Registry publication is disabled until credentials are configured. Live deployment is an
+Registry publication requires `DOCKERHUB_USER` and `DOCKERHUB_TOKEN` secrets. Live deployment is an
 explicit operator step; see the [deployment guide](docs/deployment.md).
 
 ## API development

@@ -24,3 +24,7 @@ and push. No source dataset or assessment document is published.
 6. **CI maintenance** — current SHA-pinned Actions and explicit Ubuntu 24.04 runners.
    Removes deprecated Node 20 Action runtimes and avoids an unreviewed runner OS migration.
    Verification: repeat the complete GitHub Actions verification and container smoke test.
+7. **Registry activation** — accept the operator's `DOCKERHUB_USER` and `DOCKERHUB_TOKEN`
+   repository secrets, with optional namespace overrides and explicit missing-secret failure.
+   Verification: YAML parsing, full CI and authenticated multi-platform publication.
+   Host deployment and automatic update policy still require target discovery and validation.
