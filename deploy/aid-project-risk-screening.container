@@ -1,29 +1,32 @@
 [Unit]
-Description=Aid Project Risk Screening
+Description=Aid Project Risk Screening web app
 Wants=network-online.target
 After=network-online.target
 
 [Container]
-Image=docker.io/YOUR_NAMESPACE/aid-project-risk-screening@sha256:YOUR_VERIFIED_DIGEST
-ContainerName=aid-screening
-PublishPort=127.0.0.1:8000:8000
+Image=docker.io/sgesang/aid-project-risk-screening:main
+ContainerName=aid-project-risk-screening
+PublishPort=127.0.0.1:4175:8000
 Environment=MODEL_MODE=demo
 ReadOnly=true
 NoNewPrivileges=true
 DropCapability=all
 Tmpfs=/tmp:rw,noexec,nosuid,size=64m
+AutoUpdate=registry
+Notify=healthy
 HealthCmd=python /app/backend/healthcheck.py
 HealthInterval=30s
-HealthTimeout=3s
+HealthTimeout=5s
+HealthStartPeriod=30s
 HealthRetries=3
 HealthOnFailure=kill
 
 [Service]
-Restart=on-failure
+Restart=always
 RestartSec=5
-TimeoutStartSec=180
+TimeoutStartSec=300
 MemoryMax=1G
 CPUQuota=200%
 
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target

@@ -54,6 +54,14 @@ Assumption: an existing Linux VM or LXC guest runs Podman with systemd and cgrou
 Rootless Podman in LXC may need host-specific nesting and user namespace configuration.
 Verify `podman info` first; do not switch the LXC to privileged mode just to make this work.
 
+The current target is Proxmox node `192.168.68.211`, LXC `114` (`192.168.68.194`).
+It is a rootful Podman LXC with Quadlet and an active `podman-auto-update.timer`. The
+deployment unit is [aid-project-risk-screening.container](../deploy/aid-project-risk-screening.container).
+It follows the `main` tag, binds only to `127.0.0.1:4175`, and uses `Notify=healthy` so
+systemd considers an update ready only after the API healthcheck succeeds. Podman checks
+the registry daily, and the unit restarts on health failure. The application remains in
+demo mode until a validated model is mounted deliberately.
+
 Copy `deploy/aid-screening.container.example` to
 `~/.config/containers/systemd/aid-screening.container` **on the target host**. Replace
 `YOUR_NAMESPACE` and `YOUR_VERIFIED_DIGEST` with the successful workflow's reference.
@@ -64,6 +72,21 @@ systemctl --user start aid-screening.service
 systemctl --user status aid-screening.service
 curl --fail http://127.0.0.1:8000/api/health
 ```
+
+For the current rootful LXC, install the checked-in unit as
+`/etc/containers/systemd/aid-project-risk-screening.container`:
+
+```sh
+systemctl daemon-reload
+systemctl enable --now aid-project-risk-screening.service
+systemctl status aid-project-risk-screening.service
+curl --fail http://127.0.0.1:4175/api/health
+systemctl status podman-auto-update.timer
+```
+
+Inspect update candidates with `podman auto-update --dry-run`. Keep the previous image
+digest available for rollback; update failures leave systemd and Podman health information
+in the journal.
 
 Quadlet generates the service; its `[Install]` section handles activation at user-session
 startup. For boot without login, the host administrator enables lingering for the service
@@ -79,7 +102,7 @@ label (`:ro,Z`). Never put model artifacts or registry tokens into the public re
 ## 4. Route through Cloudflare Tunnel
 
 For an existing host-level cloudflared connector on the **same Podman host**, add a published
-application route for your chosen hostname with origin `http://127.0.0.1:8000` in Cloudflare
+application route for your chosen hostname with origin `http://127.0.0.1:4175` in Cloudflare
 Zero Trust. TLS terminates at Cloudflare; the tunnel connects outbound from the host.
 Do not open the origin port publicly. The root path serves React; `/api` goes to the same origin.
 
