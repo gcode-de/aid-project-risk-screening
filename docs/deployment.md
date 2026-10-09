@@ -57,7 +57,7 @@ Verify `podman info` first; do not switch the LXC to privileged mode just to mak
 The current target is Proxmox node `192.168.68.211`, LXC `114` (`192.168.68.194`).
 It is a rootful Podman LXC with Quadlet and an active `podman-auto-update.timer`. The
 deployment unit is [aid-project-risk-screening.container](../deploy/aid-project-risk-screening.container).
-It follows the `main` tag, binds only to `127.0.0.1:4175`, and uses `Notify=healthy` so
+It follows the `main` tag, binds only to the LXC address `192.168.68.194:4175`, and uses `Notify=healthy` so
 systemd considers an update ready only after the API healthcheck succeeds. Podman checks
 the registry daily, and the unit restarts on health failure. The application remains in
 demo mode until a validated model is mounted deliberately.
