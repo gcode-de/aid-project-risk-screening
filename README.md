@@ -4,7 +4,7 @@ A focused portfolio project: React + TypeScript, FastAPI, and an explicit bounda
 trained models. The German interface supports a short presentation of project screening.
 There is no database and no submitted input is persisted.
 
-**Status:** API slice implemented. No trained model is included. Demo mode uses fixed,
+**Status:** API and React interface implemented. No trained model is included. Demo mode uses fixed,
 clearly labelled illustrative numbers, never claimed to be analytical findings.
 
 ## API development
@@ -19,6 +19,29 @@ MODEL_MODE=demo uv run uvicorn backend.main:app --reload --host 127.0.0.1
 ```
 
 API documentation: <http://127.0.0.1:8000/docs>.
+
+In a second terminal (Node 24 LTS):
+
+```sh
+cd frontend
+npm ci
+npm run dev
+```
+
+Open <http://127.0.0.1:5173>. Vite forwards `/api` to FastAPI. The production build
+is served directly by FastAPI, so the browser always uses one origin.
+
+```sh
+cd frontend
+npm test
+npm run lint
+npm run build
+npm run api:types
+```
+
+Frontend types are generated from FastAPI's OpenAPI schema; regenerate them after API
+changes. Form tests cover submission, missing CPI, stale results, unavailable models,
+network failures and negative cost changes. There are no remotely loaded fonts or assets.
 
 | Endpoint | Purpose |
 | --- | --- |
