@@ -56,6 +56,8 @@ describe("project screening", () => {
     expect(screen.queryByText(/Projekte verstehen/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Für eine fundierte Prüfung/)).not.toBeInTheDocument();
     expect(screen.queryByText("↗")).not.toBeInTheDocument();
+    expect(context).toHaveTextContent("Die Schätzungen unterstützen die fachliche Prüfung.");
+    expect(screen.queryByText("Demonstrationsmodus")).not.toBeInTheDocument();
   });
 
   it("restricts country choices to the supplied training coverage", async () => {
@@ -113,7 +115,7 @@ describe("project screening", () => {
   it("labels demo values and submits the API contract", async () => {
     const user = userEvent.setup();
     render(<App />);
-    await screen.findByText("Demonstrationsmodus");
+    await screen.findByRole("heading", { name: "Projekt erfassen" });
     await user.click(screen.getByRole("button", { name: "Projekt prüfen" }));
     expect(await screen.findByText("Prüfergebnis")).toBeVisible();
     expect(
@@ -184,7 +186,7 @@ describe("project screening", () => {
 
   it("surfaces prediction errors and re-enables submission", async () => {
     render(<App />);
-    await screen.findByText("Demonstrationsmodus");
+    await screen.findByRole("heading", { name: "Projekt erfassen" });
     vi.mocked(fetch).mockResolvedValue(
       new Response(JSON.stringify({ detail: "Modell nicht verfügbar" }), { status: 503 }),
     );

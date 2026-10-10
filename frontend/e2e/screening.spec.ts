@@ -18,7 +18,7 @@ test("puts screening before its context on desktop and mobile", async ({ page })
 
 test("screens a project through the real FastAPI service", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByText("Demonstrationsmodus")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Projekt erfassen" })).toBeVisible();
   await page.getByLabel(/Bewilligtes Budget/).fill("1000000");
   await expect(page.getByText(/Keine geprüfte CPI-Referenz verfügbar/)).toBeVisible();
   await page.getByRole("button", { name: "Projekt prüfen" }).click();
@@ -46,7 +46,7 @@ test("rejects invalid budget before submitting", async ({ page }) => {
 
 test("form and result meet automated accessibility checks", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByText("Demonstrationsmodus")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Projekt erfassen" })).toBeVisible();
   const initial = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
     .analyze();

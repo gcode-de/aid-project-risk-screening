@@ -61,3 +61,78 @@ manifest range produce visible warnings, not claims of validated forecasting abi
 Until integration, `MODEL_MODE=demo` returns fixed 64% success and +18% cost change.
 Only dollar conversion and review notes respond to inputs. These fixtures are deliberately
 independent of the source dataset and do not represent trained estimates.
+
+## Schritt für Schritt: dein trainiertes Modell einbinden
+
+Es gibt zwei Vorhersagen und deshalb zwei gespeicherte Pipelines. Eine Pipeline enthält
+das Modell **und** seine Datenaufbereitung (z. B. Umgang mit fehlendem CPI und Umwandlung
+der Ländernamen in Zahlen). So bekommt das Modell im Betrieb dieselben Eingaben wie im
+Training. Die bereits implementierte API lädt beide Dateien beim Start.
+
+1. Trainiere die Erfolgspipeline mit den sechs oben genannten Spalten und den Zielwerten
+   `0` (nicht erfolgreich) und `1` (erfolgreich). Sie muss `predict_proba` unterstützen,
+   zum Beispiel bei einer logistischen Regression.
+2. Trainiere die Kostenpipeline auf die **relative Kostenabweichung**, nicht den
+   Dollarbetrag. Das Ziel ist `(Final_Cost_USD - Initial_Budget_USD) / Initial_Budget_USD`.
+   Nutze z. B. eine lineare Regression; positive Werte bedeuten Mehrkosten.
+3. Prüfe beide Pipelines an zurückgehaltenen Daten. Speichere dann die vollständigen
+   trainierten Pipelines aus deinem Trainingsskript oder Notebook:
+
+   ```python
+   from pathlib import Path
+   import joblib
+
+   output = Path("models")
+   output.mkdir(exist_ok=True)
+   # Beide Variablen müssen bereits vollständig trainierte sklearn-Pipelines sein.
+   joblib.dump(success_pipeline, output / "success_pipeline.joblib")
+   joblib.dump(cost_pipeline, output / "cost_pipeline.joblib")
+   ```
+
+4. Lege daneben die `manifest.json` nach dem Schema oben ab. Das ist der Steckbrief des
+   Modells: Version, echte Trainingsbereiche, Länder, Sektoren, gemessene Testkennzahlen
+   und Aussagegrenzen. Länder und Sektoren müssen aus dem Training stammen und außerdem
+   im aktuell unterstützten API-Katalog enthalten sein (`backend/schemas.py`). Die
+   Länderauswahl passt sich nach dem Neustart automatisch an diesen Steckbrief an.
+5. Starte zunächst lokal mit dem vorhandenen Image:
+
+   ```sh
+   docker run --rm -p 127.0.0.1:8080:8000 \
+     -e MODEL_MODE=model -e MODEL_DIR=/models \
+     --mount type=bind,src="$(pwd)/models",dst=/models,readonly \
+     docker.io/sgesang/aid-project-risk-screening:main
+   ```
+
+   `/api/model-info` muss `mode: "model"`, `ready: true` und deine Modellversion
+   zurückgeben. Prüfe außerdem einen bekannten Testfall über das Formular und vergleiche
+   seine Ergebnisse mit den Pipeline-Ausgaben im Notebook. `health` allein reicht nicht.
+
+6. Für Proxmox kopierst du den Modellordner **in LXC 114**, beispielsweise nach
+   `/opt/aid-project-risk-screening/models`. Er muss für den Containerbenutzer UID 10001
+   lesbar sein (Ordner durchsuchbar, Dateien lesbar). Im Quadlet
+   `/etc/containers/systemd/aid-project-risk-screening.container` ersetzt du den bisherigen
+   `MODEL_MODE`-Eintrag und ergänzt unter `[Container]`:
+
+   ```ini
+   Environment=MODEL_MODE=model
+   Environment=MODEL_DIR=/models
+   Volume=/opt/aid-project-risk-screening/models:/models:ro
+   ```
+
+   Danach **innerhalb LXC 114**:
+
+   ```sh
+   systemctl daemon-reload
+   systemctl restart aid-project-risk-screening.service
+   curl --fail http://192.168.68.194:4175/api/model-info
+   ```
+
+   Prüfe anschließend auch `https://aid.samuelgesang.de/api/model-info` und eine
+   Formularübermittlung. Im Modellmodus entfallen die Beispielkennzeichnungen automatisch.
+   Die Modelldateien liegen außerhalb des Images und bleiben bei automatischen
+   Image-Updates erhalten. Python und sklearn müssen zu den Versionen des Trainings
+   passen; nutze dafür die eingecheckte `uv.lock`.
+
+Ein automatischer CPI benötigt geprüfte `cpi_references` im Steckbrief. Ohne sie bleibt
+der CPI ausdrücklich fehlend; die trainierte Pipeline muss dies verarbeiten können.
+Keine Modellartefakte oder Rohdaten in das öffentliche GitHub-Repository hochladen.

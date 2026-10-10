@@ -61,8 +61,7 @@ export default function App() {
             <div>
               <strong>Modell noch nicht eingebunden</strong>
               <p>
-                Die API ist erreichbar. Für Vorhersagen muss ein validiertes Modell geladen oder der
-                Demo-Modus ausdrücklich aktiviert werden.
+                Die API ist erreichbar. Für Vorhersagen muss ein validiertes Modell geladen werden.
               </p>
             </div>
           </div>
@@ -104,12 +103,10 @@ export default function App() {
         )}
         {setup && (
           <section className="context-info" aria-label="Einordnung">
-            <h2>{setup.info.mode === "demo" ? "Demonstrationsmodus" : "Einordnung"}</h2>
+            <h2>Einordnung</h2>
             <p>
-              {setup.info.mode === "demo"
-                ? "Die Schätzungen sind feste Beispielwerte; ein trainiertes Modell ist noch nicht eingebunden. "
-                : "Die Schätzungen unterstützen die fachliche Prüfung. "}
-              Prüfhinweise dienen zur Priorisierung und belegen kein Fehlverhalten.
+              Die Schätzungen unterstützen die fachliche Prüfung. Prüfhinweise dienen zur
+              Priorisierung und belegen kein Fehlverhalten.
             </p>
           </section>
         )}

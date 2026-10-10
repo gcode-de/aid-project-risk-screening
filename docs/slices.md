@@ -37,3 +37,7 @@ and push. No source dataset or assessment document is published.
    the actual submit button. Keep demo disclosure, error recovery and model limitations.
    Verification: component behavior, desktop/mobile layout and accessibility checks,
    TypeScript build and Biome. Updated presentation screenshot.
+10. **Model handoff** — replace the demo introduction below the form with concise general
+    interpretation guidance. Keep fixture output labelled while running demo mode; real
+    model outputs have no demo notice. Document export, local verification and the concrete
+    read-only model mount in LXC 114. Verification: frontend tests, build and browser flows.
