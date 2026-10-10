@@ -127,7 +127,16 @@ export default function ProjectForm({ options, busy, ready, onSubmit, onChange }
         </div>
         <button className="primary" type="submit">
           {busy ? "Prüfung läuft …" : "Projekt prüfen"}
-          <span aria-hidden="true">↗</span>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            aria-hidden="true"
+          >
+            <circle cx="10.5" cy="10.5" r="6.5" />
+            <path d="m16 16 4 4" />
+          </svg>
         </button>
       </fieldset>
       <p className="form-footnote">Eingaben werden nicht gespeichert.</p>

@@ -1,6 +1,21 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
+test("puts screening before its context on desktop and mobile", async ({ page }) => {
+  await page.goto("/");
+  const form = page.getByRole("heading", { name: "Projekt erfassen" });
+  const results = page.getByRole("region", { name: "Noch kein Ergebnis" });
+  const context = page.getByRole("region", { name: "Einordnung" });
+  await expect(form).toBeVisible();
+  await expect(context).toBeVisible();
+  const resultBox = await results.boundingBox();
+  const contextBox = await context.boundingBox();
+  expect(resultBox).not.toBeNull();
+  expect(contextBox).not.toBeNull();
+  expect(contextBox?.y).toBeGreaterThanOrEqual((resultBox?.y ?? 0) + (resultBox?.height ?? 0));
+  await expect(page.getByRole("complementary")).toHaveCount(0);
+});
+
 test("screens a project through the real FastAPI service", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("Demonstrationsmodus")).toBeVisible();

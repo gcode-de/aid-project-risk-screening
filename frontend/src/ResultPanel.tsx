@@ -11,25 +11,21 @@ export default function ResultPanel({ result }: { result: Prediction | null }) {
   if (!result)
     return (
       <section className="empty-state" aria-label="Noch kein Ergebnis">
-        <div className="empty-symbol" aria-hidden="true">
-          ↗
-        </div>
-        <p className="eyebrow">VOM DATENSATZ ZUR PRÜFFRAGE</p>
-        <h2>
-          Ein klarer Blick auf
-          <br />
-          das nächste Projekt.
-        </h2>
+        <svg
+          className="empty-symbol"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          aria-hidden="true"
+        >
+          <path d="M5 20V4M5 20h15M9 16v-5M13 16V7M17 16v-8" />
+        </svg>
+        <h2>Ergebnisse</h2>
         <p>
-          Erfasse die verfügbaren Projektdaten. Das Screening verbindet Kostenschätzung und
-          Erfolgsbewertung mit nachvollziehbaren Prüfhinweisen.
+          Projektdaten eingeben und „Projekt prüfen“ wählen. Hier erscheinen die Schätzungen und
+          Prüfhinweise.
         </p>
-        <div className="empty-features">
-          <span>01 &nbsp; Eingaben prüfen</span>
-          <span>02 &nbsp; Ergebnisse einordnen</span>
-          <span>03 &nbsp; Fachlich nachgehen</span>
-        </div>
-        <p className="empty-note">Die Entscheidung bleibt beim Audit-Team.</p>
       </section>
     );
   const change = result.estimates.expected_cost_change_ratio;
@@ -37,7 +33,6 @@ export default function ResultPanel({ result }: { result: Prediction | null }) {
     <section className="results" aria-label="Prüfergebnis">
       <div className="section-heading">
         <div>
-          <p className="eyebrow">02 / EINORDNUNG</p>
           <h2>Prüfergebnis</h2>
         </div>
         <span className="badge">

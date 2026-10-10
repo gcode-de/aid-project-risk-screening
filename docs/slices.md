@@ -31,3 +31,9 @@ and push. No source dataset or assessment document is published.
 8. **Proxmox deployment** — Quadlet unit for LXC 114 with loopback port 4175, boot
    activation, Podman health watchdog and registry auto-update. Verification: live health
    endpoint, running service, existing auto-update timer and container status.
+9. **Focused screening UI** — remove the unused sidebar, breadcrumbs and promotional
+   text. Lead with the form and results; place concise interpretation guidance below.
+   Replace decorative arrows with a static chart illustration and a search icon on
+   the actual submit button. Keep demo disclosure, error recovery and model limitations.
+   Verification: component behavior, desktop/mobile layout and accessibility checks,
+   TypeScript build and Biome. Updated presentation screenshot.

@@ -42,6 +42,22 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("project screening", () => {
+  it("keeps the form and results prominent with context below and no decorative navigation", async () => {
+    render(<App />);
+    const form = await screen.findByRole("heading", { name: "Projekt erfassen" });
+    const results = screen.getByRole("region", { name: "Noch kein Ergebnis" });
+    const context = screen.getByRole("region", { name: "Einordnung" });
+    expect(form.compareDocumentPosition(context) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(
+      results.compareDocumentPosition(context) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
+    expect(screen.queryByText("PORTFOLIO")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Projekte verstehen/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Für eine fundierte Prüfung/)).not.toBeInTheDocument();
+    expect(screen.queryByText("↗")).not.toBeInTheDocument();
+  });
+
   it("restricts country choices to the supplied training coverage", async () => {
     const submit = vi.fn();
     const user = userEvent.setup();

@@ -47,126 +47,73 @@ export default function App() {
       <a className="skip-link" href="#main">
         Zum Inhalt
       </a>
-      <aside className="sidebar">
-        <a className="brand" href="/" aria-label="Aid Portfolio Startseite">
-          <span className="brand-mark" aria-hidden="true">
-            a<span>.</span>
-          </span>
-          <span>
-            AID
-            <br />
-            <b>PORTFOLIO</b>
-          </span>
-        </a>
-        <p className="nav-label">ARBEITSBEREICH</p>
-        <div className="nav-active">
-          <span aria-hidden="true">▦</span> Projektprüfung <span className="nav-dot" />
+      <main id="main">
+        <div className="page-title">
+          <h1>Projektprüfung</h1>
+          {setup && (
+            <span className="badge">
+              {setup.info.mode === "model" ? "Modellschätzung" : "Prototyp"}
+            </span>
+          )}
         </div>
-        <div className="sidebar-bottom">
-          <span className="sidebar-line" />
-          <p>
-            Gute Entscheidungen
-            <br />
-            beginnen mit guten Fragen.
-          </p>
-          <span>ANALYTICS / PROTOTYPE</span>
-        </div>
-      </aside>
-      <div className="workspace">
-        <header className="topbar">
-          <span>
-            Portfolio <span className="crumb">/</span> <strong>Projektprüfung</strong>
-          </span>
-          <span className="top-status">
-            <i /> {setup?.info.mode === "model" ? "Modell verbunden" : "Präsentationsprototyp"}
-          </span>
-        </header>
-        <main id="main">
-          <div className="page-title">
+        {setup && !setup.info.ready && (
+          <div className="mode-banner">
             <div>
-              <p className="eyebrow">PROJECT RISK SCREENING</p>
-              <h1>
-                Projekte verstehen.
-                <br />
-                <span>Prüfungen fokussieren.</span>
-              </h1>
-              <p className="intro">
-                Eine nachvollziehbare Grundlage für die nächste fachliche Prüfung.
+              <strong>Modell noch nicht eingebunden</strong>
+              <p>
+                Die API ist erreichbar. Für Vorhersagen muss ein validiertes Modell geladen oder der
+                Demo-Modus ausdrücklich aktiviert werden.
               </p>
             </div>
-            <span className="version-tag">POC / 01</span>
           </div>
-          {setup?.info.mode === "demo" && (
-            <div className="mode-banner">
-              <span className="banner-icon" aria-hidden="true">
-                i
-              </span>
-              <div>
-                <strong>Demonstrationsmodus</strong>
-                <p>
-                  Die Oberfläche ist funktionsfähig. Angezeigte Schätzungen sind feste Beispielwerte
-                  – ein trainiertes Modell folgt.
-                </p>
-              </div>
-              <span className="badge">DEMO</span>
-            </div>
-          )}
-          {setup && !setup.info.ready && (
-            <div className="mode-banner">
-              <div>
-                <strong>Modell noch nicht eingebunden</strong>
-                <p>
-                  Die API ist erreichbar. Für Vorhersagen muss ein validiertes Modell geladen oder
-                  der Demo-Modus ausdrücklich aktiviert werden.
-                </p>
-              </div>
-            </div>
-          )}
-          {error && (
-            <div className="error" role="alert">
-              <p>{error}</p>
-              {!setup && (
-                <button type="button" onClick={() => setReload((value) => value + 1)}>
-                  Verbindung erneut prüfen
-                </button>
-              )}
-            </div>
-          )}
-          {!setup && !error && <p role="status">Arbeitsbereich wird geladen …</p>}
-          {setup && (
-            <div className="screening-grid">
-              <section className="form-panel">
-                <div className="section-heading">
-                  <div>
-                    <p className="eyebrow">01 / PROJEKTDATEN</p>
-                    <h2>Projekt erfassen</h2>
-                  </div>
-                  <span className="small-symbol" aria-hidden="true">
-                    ↗
-                  </span>
+        )}
+        {error && (
+          <div className="error" role="alert">
+            <p>{error}</p>
+            {!setup && (
+              <button type="button" onClick={() => setReload((value) => value + 1)}>
+                Verbindung erneut prüfen
+              </button>
+            )}
+          </div>
+        )}
+        {!setup && !error && <p role="status">Arbeitsbereich wird geladen …</p>}
+        {setup && (
+          <div className="screening-grid">
+            <section className="form-panel">
+              <div className="section-heading">
+                <div>
+                  <h2>Projekt erfassen</h2>
                 </div>
-                <ProjectForm
-                  options={setup.options}
-                  busy={busy}
-                  ready={setup.info.ready}
-                  onSubmit={predict}
-                  onChange={() => {
-                    setResult(null);
-                    setError(null);
-                  }}
-                />
-              </section>
-              <div aria-live="polite" aria-busy={busy}>
-                <ResultPanel result={result} />
               </div>
+              <ProjectForm
+                options={setup.options}
+                busy={busy}
+                ready={setup.info.ready}
+                onSubmit={predict}
+                onChange={() => {
+                  setResult(null);
+                  setError(null);
+                }}
+              />
+            </section>
+            <div aria-live="polite" aria-busy={busy}>
+              <ResultPanel result={result} />
             </div>
-          )}
-          <footer>
-            <span>Für eine fundierte Prüfung. Die Verantwortung bleibt beim Menschen.</span>
-            <span>REACT + FASTAPI</span>
-          </footer>
-        </main>
-      </div>
+          </div>
+        )}
+        {setup && (
+          <section className="context-info" aria-label="Einordnung">
+            <h2>{setup.info.mode === "demo" ? "Demonstrationsmodus" : "Einordnung"}</h2>
+            <p>
+              {setup.info.mode === "demo"
+                ? "Die Schätzungen sind feste Beispielwerte; ein trainiertes Modell ist noch nicht eingebunden. "
+                : "Die Schätzungen unterstützen die fachliche Prüfung. "}
+              Prüfhinweise dienen zur Priorisierung und belegen kein Fehlverhalten.
+            </p>
+          </section>
+        )}
+      </main>
     </div>
   );
 }
