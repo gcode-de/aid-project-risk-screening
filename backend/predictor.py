@@ -215,13 +215,11 @@ class Predictor:
                         f"einer hinterlegten Förderstufe."
                     ),
                     meaning=(
-                        "Ein wiederkehrender Betrag kann eine standardisierte Förderstufe "
-                        "sein."
+                        "Ein wiederkehrender Betrag kann eine standardisierte Förderstufe sein."
                     ),
                     limits="Kein Manipulationsnachweis und keine Erklärung der Modellgewichtung.",
                     next_step=(
-                        "Förderrichtlinie und Bewilligungsbescheid auf die Förderstufe "
-                        "abgleichen."
+                        "Förderrichtlinie und Bewilligungsbescheid auf die Förderstufe abgleichen."
                     ),
                 )
             )
@@ -298,8 +296,7 @@ class Predictor:
                         ),
                         meaning="Das Budget liegt außerhalb der Trainingsabdeckung.",
                         limits=(
-                            "Übertragbarkeit nicht nachgewiesen; keine Aussage über "
-                            "Fehlverhalten."
+                            "Übertragbarkeit nicht nachgewiesen; keine Aussage über Fehlverhalten."
                         ),
                         next_step=(
                             "Modellkarte und Validierung für diese Budgetgröße prüfen; bei "
