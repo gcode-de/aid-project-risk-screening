@@ -42,6 +42,13 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("project screening", () => {
+  it("explains fixed demo values before submission and identifies example inputs", async () => {
+    render(<App />);
+    expect(await screen.findByText(/64 % und \+18 % sind feste Beispielwerte/)).toBeVisible();
+    expect(screen.getByText(/Vorgefüllte Daten sind ein Beispielprojekt/)).toBeVisible();
+    expect(screen.getByRole("button", { name: "Beispiel prüfen" })).toBeEnabled();
+    expect(screen.queryByText("Prüfergebnis")).not.toBeInTheDocument();
+  });
   it("keeps the form and results prominent with context below and no decorative navigation", async () => {
     render(<App />);
     const form = await screen.findByRole("heading", { name: "Projekt erfassen" });
@@ -74,7 +81,7 @@ describe("project screening", () => {
     );
     expect(screen.getByLabelText("Empfängerland")).toHaveValue("Germany");
     expect(screen.queryByRole("option", { name: "Kenya" })).not.toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Projekt prüfen" }));
+    await user.click(screen.getByRole("button", { name: /Projekt prüfen|Beispiel prüfen/ }));
     expect(submit).toHaveBeenCalledWith(
       expect.objectContaining({
         country: "Germany",
@@ -103,7 +110,7 @@ describe("project screening", () => {
     const user = userEvent.setup();
     render(<App />);
     expect(await screen.findByText(/CPI 31 · Referenzjahr 2023 · Fixture source/)).toBeVisible();
-    await user.click(screen.getByRole("button", { name: "Projekt prüfen" }));
+    await user.click(screen.getByRole("button", { name: /Projekt prüfen|Beispiel prüfen/ }));
     await screen.findByText("Prüfergebnis");
     const call = vi.mocked(fetch).mock.calls.find(([url]) => url === "/api/predict");
     expect(JSON.parse(String(call?.[1]?.body))).toMatchObject({
@@ -116,7 +123,7 @@ describe("project screening", () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByRole("heading", { name: "Projekt erfassen" });
-    await user.click(screen.getByRole("button", { name: "Projekt prüfen" }));
+    await user.click(screen.getByRole("button", { name: /Projekt prüfen|Beispiel prüfen/ }));
     expect(await screen.findByText("Prüfergebnis")).toBeVisible();
     expect(
       screen.getByText("Feste Demonstrationswerte. Keine trainierte Vorhersage."),
@@ -138,7 +145,7 @@ describe("project screening", () => {
     render(<App />);
     await user.click(await screen.findByLabelText("CPI manuell eingeben"));
     await user.type(screen.getByLabelText(/CPI-Wert/), "0");
-    await user.click(screen.getByRole("button", { name: "Projekt prüfen" }));
+    await user.click(screen.getByRole("button", { name: /Projekt prüfen|Beispiel prüfen/ }));
     await screen.findByText("Prüfergebnis");
     const call = vi.mocked(fetch).mock.calls.find(([url]) => url === "/api/predict");
     expect(JSON.parse(String(call?.[1]?.body))).toMatchObject({ cpi_mode: "manual", cpi_score: 0 });
@@ -155,7 +162,7 @@ describe("project screening", () => {
 
   it("removes stale results when the user edits input", async () => {
     render(<App />);
-    fireEvent.click(await screen.findByRole("button", { name: "Projekt prüfen" }));
+    fireEvent.click(await screen.findByRole("button", { name: /Projekt prüfen|Beispiel prüfen/ }));
     await screen.findByText("Prüfergebnis");
     fireEvent.change(screen.getByLabelText(/Bewilligtes Budget/), { target: { value: "100000" } });
     expect(screen.queryByText("Prüfergebnis")).not.toBeInTheDocument();
@@ -174,7 +181,7 @@ describe("project screening", () => {
     );
     render(<App />);
     await screen.findByText("Modell noch nicht eingebunden");
-    expect(screen.getByRole("button", { name: "Projekt prüfen" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Projekt prüfen|Beispiel prüfen/ })).toBeDisabled();
   });
 
   it("offers recovery after connection failure", async () => {
@@ -190,10 +197,10 @@ describe("project screening", () => {
     vi.mocked(fetch).mockResolvedValue(
       new Response(JSON.stringify({ detail: "Modell nicht verfügbar" }), { status: 503 }),
     );
-    fireEvent.click(screen.getByRole("button", { name: "Projekt prüfen" }));
+    fireEvent.click(screen.getByRole("button", { name: /Projekt prüfen|Beispiel prüfen/ }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Modell nicht verfügbar");
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Projekt prüfen" })).toBeEnabled(),
+      expect(screen.getByRole("button", { name: /Projekt prüfen|Beispiel prüfen/ })).toBeEnabled(),
     );
   });
 

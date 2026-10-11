@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Literal, get_args
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
 Country = Literal[
     "Colombia",
@@ -62,6 +62,10 @@ class ReviewNote(BaseModel):
     code: str
     title: str
     detail: str
+    trigger: str | None = None
+    meaning: str | None = None
+    limits: str | None = None
+    next_step: str | None = None
 
 
 class Estimates(BaseModel):
@@ -91,6 +95,9 @@ class ModelInfo(BaseModel):
     metrics: dict[str, float] = Field(default_factory=dict)
     training_year_min: int | None = None
     training_year_max: int | None = None
+    success_definition: str | None = None
+    evaluation_horizon: str | None = None
+    model_card_url: HttpUrl | None = None
 
 
 class Options(BaseModel):

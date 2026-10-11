@@ -136,6 +136,12 @@ export interface components {
             training_year_min?: number | null;
             /** Training Year Max */
             training_year_max?: number | null;
+            /** Success Definition */
+            success_definition?: string | null;
+            /** Evaluation Horizon */
+            evaluation_horizon?: string | null;
+            /** Model Card Url */
+            model_card_url?: string | null;
         };
         /** Options */
         Options: {
@@ -199,6 +205,14 @@ export interface components {
             title: string;
             /** Detail */
             detail: string;
+            /** Trigger */
+            trigger?: string | null;
+            /** Meaning */
+            meaning?: string | null;
+            /** Limits */
+            limits?: string | null;
+            /** Next Step */
+            next_step?: string | null;
         };
         /** ValidationError */
         ValidationError: {

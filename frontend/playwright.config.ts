@@ -6,7 +6,13 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
-  use: { baseURL: "http://127.0.0.1:8000", trace: "retain-on-failure" },
+  use: {
+    baseURL: "http://127.0.0.1:8000",
+    trace: "retain-on-failure",
+    launchOptions: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
+      ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE }
+      : {},
+  },
   projects: [
     {
       name: "desktop",
@@ -16,6 +22,7 @@ export default defineConfig({
   ],
   webServer: {
     command:
+      process.env.PLAYWRIGHT_SERVER_COMMAND ??
       "uv run --project .. uvicorn backend.main:app --app-dir .. --host 127.0.0.1 --port 8000",
     url: "http://127.0.0.1:8000/api/health",
     env: { MODEL_MODE: "demo", STATIC_DIR: "dist" },

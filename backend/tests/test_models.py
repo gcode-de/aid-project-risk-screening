@@ -185,6 +185,85 @@ def test_cpi_lookup_respects_country_publication_and_missing_values(model_dir, m
         assert "stale-cpi" in [note["code"] for note in result["notes"]]
 
 
+@pytest.mark.parametrize(
+    "approval_year, expected_stale", [(2022, False), (2023, True), (2024, True)]
+)
+def test_stale_cpi_note_has_structured_evidence_and_preserves_threshold(
+    model_dir, approval_year, expected_stale
+):
+    from backend.schemas import CpiReference
+
+    predictor = Predictor("model", model_dir)
+    predictor.manifest.cpi_references = [
+        CpiReference(
+            country="Kenya",
+            reference_year=2020,
+            score=31,
+            source="Synthetic test reference, not official",
+            available_from="2021-01-15",
+        )
+    ]
+    with TestClient(create_app(predictor)) as client:
+        response = client.post(
+            "/api/predict",
+            json={**PROJECT, "approval_year": approval_year, "cpi_mode": "auto", "cpi_score": None},
+        )
+    assert response.status_code == 200
+    result = response.json()
+    assert result["cpi"]["score"] == 31
+    assert result["estimates"]["success_probability"] == 0.5
+    assert result["expected_cost_change_usd"] == -50000
+    stale = [note for note in result["notes"] if note["code"] == "stale-cpi"]
+    assert bool(stale) == expected_stale
+    if expected_stale:
+        note = stale[0]
+        for field in ("title", "detail", "trigger", "meaning", "limits", "next_step"):
+            assert note[field]
+        assert "2020" in note["trigger"]
+        assert str(approval_year) in note["trigger"]
+        assert f"{approval_year - 2020} Jahre" in note["trigger"]
+        assert "über zwei Jahre" in note["trigger"]
+        assert "Fehlverhalten" in note["limits"]
+        assert "Genehmigungsmonat" in note["next_step"]
+        assert "veröffentlicht" in note["next_step"]
+
+
+def test_every_emitted_review_rule_has_structured_fields(model_dir):
+    from backend.schemas import CpiReference
+
+    predictor = Predictor("model", model_dir)
+    predictor.manifest.cpi_references = [
+        CpiReference(
+            country="Kenya",
+            reference_year=2020,
+            score=31,
+            source="Synthetic test reference, not official",
+            available_from="2021-01-15",
+        )
+    ]
+    codes = set()
+    with TestClient(create_app(predictor)) as client:
+        for overrides in (
+            {"country": "Germany", "cpi_mode": "auto", "cpi_score": None},
+            {"cpi_mode": "auto", "cpi_score": None},
+            {"initial_budget_usd": 2000000},
+        ):
+            response = client.post("/api/predict", json={**PROJECT, **overrides})
+            assert response.status_code == 200
+            for note in response.json()["notes"]:
+                codes.add(note["code"])
+                for field in ("title", "detail", "trigger", "meaning", "limits", "next_step"):
+                    assert note[field], (note["code"], field)
+    assert codes == {
+        "round-budget",
+        "missing-cpi",
+        "approval-timing",
+        "year-outside-training",
+        "budget-outside-training",
+        "stale-cpi",
+    }
+
+
 def test_duplicate_cpi_reference_rejected(model_dir):
     path = model_dir / "manifest.json"
     manifest = json.loads(path.read_text())

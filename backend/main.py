@@ -81,6 +81,25 @@ def create_app(predictor: Predictor | None = None, static_dir: Path | None = Non
                             "Die Referenz ist über zwei Jahre alt. "
                             "Ihre Aussagekraft fachlich prüfen."
                         ),
+                        trigger=(
+                            f"CPI-Referenzjahr: {cpi.reference_year}; Genehmigungsjahr: "
+                            f"{project.approval_year}; Abstand: "
+                            f"{project.approval_year - cpi.reference_year} Jahre "
+                            "(über zwei Jahre)."
+                        ),
+                        meaning=(
+                            "Die verwendete Länderreferenz liegt zeitlich weiter vom "
+                            "Genehmigungsjahr entfernt; ihre Aussagekraft fachlich prüfen."
+                        ),
+                        limits=(
+                            "Eine ältere Länderreferenz belegt weder projektspezifisches "
+                            "Risiko noch Fehlverhalten und erklärt nicht die Modellgewichtung."
+                        ),
+                        next_step=(
+                            "Referenzquelle und Veröffentlichungsdatum prüfen; eine neuere, "
+                            "vor dem Genehmigungsmonat veröffentlichte Länderreferenz suchen "
+                            "oder das Fehlen geeigneter Daten dokumentieren."
+                        ),
                     )
                 )
             return Prediction(

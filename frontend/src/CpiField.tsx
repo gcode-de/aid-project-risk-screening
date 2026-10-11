@@ -1,18 +1,39 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { type CpiSelection, request } from "./api";
 
 export default function CpiField({
   country,
   year,
   month,
+  invalid = false,
 }: {
   country: string;
   year: number;
   month: number;
+  invalid?: boolean;
 }) {
   const [manual, setManual] = useState(false);
   const [reference, setReference] = useState<CpiSelection | null>(null);
   const [error, setError] = useState(false);
+  const [resetMessage, setResetMessage] = useState("");
+  const previous = useRef({ country, year, month });
+  const checkboxRef = useRef<HTMLInputElement>(null);
+  const valueRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const before = previous.current;
+    if (before.country !== country || before.year !== year || before.month !== month) {
+      if (manual) {
+        if (document.activeElement === valueRef.current) checkboxRef.current?.focus();
+        setManual(false);
+        setResetMessage(
+          `Manueller CPI wurde zurückgesetzt, weil sich ${before.country !== country ? "das Empfängerland" : "der Genehmigungszeitpunkt"} geändert hat. Bitte bei Bedarf neu eingeben und erneut prüfen.`,
+        );
+      }
+      setReference(null);
+      setError(false);
+      previous.current = { country, year, month };
+    }
+  }, [country, year, month, manual]);
   useEffect(() => {
     if (!Number.isInteger(year) || year < 2000 || year > 2100) return;
     const controller = new AbortController();
@@ -36,6 +57,9 @@ export default function CpiField({
     <div className="wide cpi-field">
       <input type="hidden" name="cpi_mode" value={manual ? "manual" : "auto"} />
       <p className="cpi-title">CPI · Länderreferenz</p>
+      <p className="help" role="status">
+        {resetMessage}
+      </p>
       {!manual && (
         <p className="help" role="status">
           {error
@@ -52,8 +76,12 @@ export default function CpiField({
       <label className="checkbox">
         <input
           type="checkbox"
+          ref={checkboxRef}
           checked={manual}
-          onChange={(event) => setManual(event.target.checked)}
+          onChange={(event) => {
+            setManual(event.target.checked);
+            setResetMessage("");
+          }}
         />
         CPI manuell eingeben
       </label>
@@ -62,14 +90,22 @@ export default function CpiField({
           CPI-Wert <span className="unit">0–100</span>
           <input
             name="cpi"
+            ref={valueRef}
             type="number"
+            inputMode="decimal"
             min="0"
             max="100"
             step="0.1"
             required
-            aria-describedby="cpi-help"
+            aria-invalid={invalid || undefined}
+            aria-describedby={invalid ? "cpi-help cpi-error" : "cpi-help"}
           />
         </label>
+      )}
+      {invalid && (
+        <p id="cpi-error" className="field-error">
+          Bitte einen CPI-Wert zwischen 0 und 100 eingeben.
+        </p>
       )}
       <p id="cpi-help" className="help">
         Korruptionswahrnehmungsindex: höhere Werte bedeuten weniger wahrgenommene Korruption. Kein

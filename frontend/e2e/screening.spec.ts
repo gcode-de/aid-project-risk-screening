@@ -21,7 +21,7 @@ test("screens a project through the real FastAPI service", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Projekt erfassen" })).toBeVisible();
   await page.getByLabel(/Bewilligtes Budget/).fill("1000000");
   await expect(page.getByText(/Keine geprüfte CPI-Referenz verfügbar/)).toBeVisible();
-  await page.getByRole("button", { name: "Projekt prüfen" }).click();
+  await page.getByRole("button", { name: "Beispiel prüfen" }).click();
   await expect(page.getByRole("heading", { name: "Prüfergebnis" })).toBeVisible();
   await expect(page.getByText("180.000 $", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "CPI-Wert fehlt" })).toBeVisible();
@@ -35,7 +35,7 @@ test("screens a project through the real FastAPI service", async ({ page }) => {
 test("rejects invalid budget before submitting", async ({ page }) => {
   await page.goto("/");
   await page.getByLabel(/Bewilligtes Budget/).fill("-100");
-  await page.getByRole("button", { name: "Projekt prüfen" }).click();
+  await page.getByRole("button", { name: "Beispiel prüfen" }).click();
   expect(
     await page
       .getByLabel(/Bewilligtes Budget/)
@@ -56,7 +56,7 @@ test("form and result meet automated accessibility checks", async ({ page }) => 
       targets: item.nodes.map((node) => node.target),
     })),
   ).toEqual([]);
-  await page.getByRole("button", { name: "Projekt prüfen" }).click();
+  await page.getByRole("button", { name: "Beispiel prüfen" }).click();
   await expect(page.getByRole("heading", { name: "Prüfergebnis" })).toBeVisible();
   const result = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
@@ -82,5 +82,5 @@ test("API outage gives a retry control", async ({ page }) => {
   await expect(page.getByRole("alert")).toContainText("Verbindung");
   await page.unroute("**/api/model-info");
   await page.getByRole("button", { name: "Verbindung erneut prüfen" }).click();
-  await expect(page.getByRole("button", { name: "Projekt prüfen" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Beispiel prüfen" })).toBeEnabled();
 });

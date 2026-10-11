@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { type ModelInfo, type Options, type Prediction, type ProjectInput, request } from "./api";
+import {
+  FieldError,
+  type ModelInfo,
+  type Options,
+  type Prediction,
+  type ProjectInput,
+  request,
+} from "./api";
 import ProjectForm from "./ProjectForm";
 import ResultPanel from "./ResultPanel";
 
@@ -9,6 +16,9 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [reload, setReload] = useState(0);
+  const [submitted, setSubmitted] = useState<ProjectInput | null>(null);
+  const [changed, setChanged] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<string[]>([]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: reload deliberately retries the same request.
   useEffect(() => {
@@ -28,6 +38,9 @@ export default function App() {
   }, [reload]);
 
   async function predict(project: ProjectInput) {
+    setFieldErrors([]);
+    setSubmitted(project);
+    setChanged(false);
     setBusy(true);
     setError(null);
     setResult(null);
@@ -36,7 +49,19 @@ export default function App() {
         await request<Prediction>("/predict", { method: "POST", body: JSON.stringify(project) }),
       );
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Die Prüfung ist fehlgeschlagen.");
+      if (error instanceof FieldError) setFieldErrors(error.fields);
+      const name = error && typeof error === "object" && "name" in error ? error.name : "";
+      setError(
+        name === "TimeoutError"
+          ? "Das Zeitlimit der Prüfung wurde erreicht. Eingaben bleiben erhalten. Bitte erneut versuchen."
+          : name === "AbortError"
+            ? "Die Prüfung wurde abgebrochen. Eingaben bleiben erhalten. Bitte erneut versuchen."
+            : error instanceof TypeError
+              ? "Die Verbindung zum Backend ist unterbrochen. Eingaben bleiben erhalten. Bitte erneut versuchen."
+              : error instanceof Error
+                ? error.message
+                : "Die Prüfung ist fehlgeschlagen. Eingaben bleiben erhalten. Bitte erneut versuchen.",
+      );
     } finally {
       setBusy(false);
     }
@@ -52,10 +77,25 @@ export default function App() {
           <h1>Projektprüfung</h1>
           {setup && (
             <span className="badge">
-              {setup.info.mode === "model" ? "Modellschätzung" : "Prototyp"}
+              {setup.info.mode === "model"
+                ? "Modellschätzung"
+                : setup.info.mode === "demo"
+                  ? "Demo · feste Werte"
+                  : "Nicht verfügbar"}
             </span>
           )}
         </div>
+        {setup?.info.mode === "demo" && (
+          <div className="mode-banner">
+            <div>
+              <strong>Demonstration · keine trainierte Vorhersage</strong>
+              <p>
+                64 % und +18 % sind feste Beispielwerte. Eingaben verändern nur Dollarbetrag und
+                regelbasierte Prüfhinweise.
+              </p>
+            </div>
+          </div>
+        )}
         {setup && !setup.info.ready && (
           <div className="mode-banner">
             <div>
@@ -66,7 +106,7 @@ export default function App() {
             </div>
           </div>
         )}
-        {error && (
+        {error && !setup && (
           <div className="error" role="alert">
             <p>{error}</p>
             {!setup && (
@@ -87,17 +127,58 @@ export default function App() {
               </div>
               <ProjectForm
                 options={setup.options}
+                demo={setup.info.mode === "demo"}
                 busy={busy}
                 ready={setup.info.ready}
+                fieldErrors={fieldErrors}
                 onSubmit={predict}
                 onChange={() => {
+                  setFieldErrors([]);
+                  setChanged(true);
                   setResult(null);
                   setError(null);
                 }}
               />
+              {error && (
+                <div className="error" role="alert">
+                  <p>{error}</p>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => submitted && predict(submitted)}
+                  >
+                    Prüfung wiederholen
+                  </button>
+                </div>
+              )}
+              <p role="status">
+                {busy
+                  ? "Prüfung läuft. Bitte warten …"
+                  : result
+                    ? "Prüfung abgeschlossen. Das Ergebnis ist verfügbar."
+                    : changed
+                      ? "Eingaben geändert. Bitte erneut prüfen."
+                      : ""}
+              </p>
+              {result && (
+                // biome-ignore lint/a11y/useValidAnchor: Real fragment navigation; handler additionally focuses its heading for keyboard users.
+                <a
+                  className="result-link"
+                  href="#result-heading"
+                  onClick={() => document.getElementById("result-heading")?.focus()}
+                >
+                  Zum Ergebnis
+                </a>
+              )}
             </section>
-            <div aria-live="polite" aria-busy={busy}>
-              <ResultPanel result={result} />
+            <div aria-busy={busy}>
+              <ResultPanel
+                result={result}
+                project={submitted}
+                sectors={setup.options.sectors}
+                info={setup.info}
+                state={busy ? "running" : error ? "error" : changed ? "changed" : "idle"}
+              />
             </div>
           </div>
         )}

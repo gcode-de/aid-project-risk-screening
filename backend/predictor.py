@@ -5,7 +5,7 @@ from datetime import date
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, model_validator
 
 from backend.schemas import (
     COUNTRIES,
@@ -47,6 +47,9 @@ class Manifest(BaseModel):
     cpi_references: list[CpiReference] = Field(default_factory=list)
     metrics: dict[str, float]
     limitations: list[str] = Field(min_length=1)
+    success_definition: str | None = Field(default=None, min_length=1)
+    evaluation_horizon: str | None = Field(default=None, min_length=1)
+    model_card_url: HttpUrl | None = None
 
     @model_validator(mode="after")
     def validate_contract(self):
@@ -101,6 +104,9 @@ class Predictor:
                 metrics=self.manifest.metrics,
                 training_year_min=self.manifest.training_year_min,
                 training_year_max=self.manifest.training_year_max,
+                success_definition=self.manifest.success_definition,
+                evaluation_horizon=self.manifest.evaluation_horizon,
+                model_card_url=self.manifest.model_card_url,
             )
         elif mode == "demo":
             self.info = ModelInfo(
@@ -204,6 +210,19 @@ class Predictor:
                     code="round-budget",
                     title="Wiederkehrender Budgetbetrag",
                     detail=("Standardisierte Förderstufe prüfen. Kein Manipulationsnachweis."),
+                    trigger=(
+                        f"Bewilligtes Budget: {project.initial_budget_usd:g} USD; entspricht "
+                        f"einer hinterlegten Förderstufe."
+                    ),
+                    meaning=(
+                        "Ein wiederkehrender Betrag kann eine standardisierte Förderstufe "
+                        "sein."
+                    ),
+                    limits="Kein Manipulationsnachweis und keine Erklärung der Modellgewichtung.",
+                    next_step=(
+                        "Förderrichtlinie und Bewilligungsbescheid auf die Förderstufe "
+                        "abgleichen."
+                    ),
                 )
             )
         if project.cpi_score is None:
@@ -212,6 +231,13 @@ class Predictor:
                     code="missing-cpi",
                     title="CPI-Wert fehlt",
                     detail="Datenlücke: Das Modell muss fehlende Werte verarbeiten können.",
+                    trigger="Verwendeter CPI: nicht verfügbar.",
+                    meaning="Die Länderreferenz fehlt; dies ist eine Datenqualitätsfrage.",
+                    limits="Kein Urteil über das Projekt; fehlender CPI belegt kein Fehlverhalten.",
+                    next_step=(
+                        "Eine vor dem Genehmigungsmonat verfügbare, belegbare Referenz "
+                        "prüfen; andernfalls Datenlücke dokumentieren."
+                    ),
                 )
             )
         if project.approval_month in {9, 12}:
@@ -220,6 +246,13 @@ class Predictor:
                     code="approval-timing",
                     title="Genehmigungszeitpunkt prüfen",
                     detail="Haushaltsfristen klären. Der Monat allein belegt kein höheres Risiko.",
+                    trigger=(
+                        f"Genehmigungsmonat: {project.approval_month}; Regel gilt für "
+                        f"September und Dezember."
+                    ),
+                    meaning="Der Zeitpunkt kann mit Haushaltsfristen zusammenhängen.",
+                    limits="Der Monat allein belegt kein höheres Risiko oder Fehlverhalten.",
+                    next_step="Zeitplan, Haushaltsfristen und Genehmigungsbegründung abgleichen.",
                 )
             )
         if self.manifest:
@@ -233,6 +266,19 @@ class Predictor:
                         code="year-outside-training",
                         title="Jahr außerhalb der Trainingsdaten",
                         detail="Die Übertragbarkeit auf diesen Zeitraum ist nicht nachgewiesen.",
+                        trigger=(
+                            f"Genehmigungsjahr: {project.approval_year}; Trainingszeitraum: "
+                            f"{self.manifest.training_year_min}–{self.manifest.training_year_max}."
+                        ),
+                        meaning="Das Projekt liegt zeitlich außerhalb der Trainingsabdeckung.",
+                        limits=(
+                            "Übertragbarkeit nicht nachgewiesen; kein projektspezifischer "
+                            "Risikonachweis."
+                        ),
+                        next_step=(
+                            "Modellkarte und zeitlich passende Validierung prüfen; ohne "
+                            "Nachweis Schätzung nicht als Entscheidungsgrundlage verwenden."
+                        ),
                     )
                 )
             if (
@@ -245,6 +291,20 @@ class Predictor:
                         code="budget-outside-training",
                         title="Budget außerhalb der Trainingsdaten",
                         detail="Die Übertragbarkeit auf diese Budgetgröße ist nicht nachgewiesen.",
+                        trigger=(
+                            f"Budget: {project.initial_budget_usd:g} USD; Trainingsbereich: "
+                            f"{self.manifest.budget_min_usd:g}–{self.manifest.budget_max_usd:g} "
+                            f"USD."
+                        ),
+                        meaning="Das Budget liegt außerhalb der Trainingsabdeckung.",
+                        limits=(
+                            "Übertragbarkeit nicht nachgewiesen; keine Aussage über "
+                            "Fehlverhalten."
+                        ),
+                        next_step=(
+                            "Modellkarte und Validierung für diese Budgetgröße prüfen; bei "
+                            "fehlendem Nachweis fachlich separat bewerten."
+                        ),
                     )
                 )
         return notes

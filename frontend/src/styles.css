@@ -728,7 +728,129 @@ h1 {
   font-weight: 600;
   margin-bottom: 4px;
 }
-@media (max-width: 760px) {
+/* Readable screening controls and evidence, including narrow/zoomed views. */
+.mode-banner strong,
+.mode-banner p,
+.fields label,
+.cpi-field > label:first-child,
+.fields .checkbox,
+.primary,
+.empty-state > p:not(.eyebrow),
+.notes h4,
+.context-info h2 {
+  font-size: 16px;
+}
+.badge,
+.unit,
+.help,
+.form-footnote,
+.demo-result,
+.metric p,
+.metric span,
+.cost-total span,
+.notes-header > span,
+.note-number,
+.notes p,
+.no-notes,
+.limitations,
+.context-info,
+.error {
+  font-size: 14px;
+}
+.help,
+.notes p,
+.limitations {
+  color: #465b4c;
+}
+.fields input:not([type="checkbox"]),
+.fields select {
+  min-width: 0;
+  height: 48px;
+  font-size: 16px;
+}
+.fields .checkbox {
+  min-height: 44px;
+  gap: 10px;
+}
+.checkbox input {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.primary,
+.error button,
+.result-link,
+.limitations summary,
+.error-summary a {
+  min-height: 44px;
+}
+.result-link,
+.error-summary a {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 0;
+}
+.screening-grid {
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+}
+.screening-grid > *,
+.fields > *,
+.metric-grid > *,
+.notes li > div {
+  min-width: 0;
+}
+.results,
+.mode-banner,
+.field-error,
+.error-summary {
+  overflow-wrap: anywhere;
+}
+.page-title,
+.section-heading {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.input-summary,
+.model-context {
+  margin: 20px 0;
+  padding: 16px;
+  background: #f5f8f1;
+  border: 1px solid #dce3d8;
+  border-radius: 8px;
+}
+.input-summary dl,
+.rule-detail {
+  margin: 12px 0;
+  font-size: 14px;
+}
+.input-summary dt,
+.rule-detail dt {
+  font-weight: 600;
+  margin-top: 10px;
+}
+.input-summary dd,
+.rule-detail dd {
+  margin: 2px 0 0;
+}
+.field-error,
+.error-summary {
+  color: #852f1c;
+  font-size: 14px;
+}
+.field-error {
+  display: block;
+  margin-top: 6px;
+}
+.fields input[aria-invalid="true"],
+.fields select[aria-invalid="true"] {
+  border-color: #852f1c;
+}
+@media (prefers-reduced-motion: reduce) {
+  .primary {
+    transition: none;
+  }
+}
+@media (max-width: 900px) {
   .screening-grid {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -745,7 +867,9 @@ h1 {
   .empty-state {
     padding: 20px;
   }
-  .fields {
+  .fields,
+  .metric-grid {
+    grid-template-columns: minmax(0, 1fr);
     gap: 17px 12px;
   }
   .metric strong {
