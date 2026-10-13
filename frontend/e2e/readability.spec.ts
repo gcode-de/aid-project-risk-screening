@@ -46,10 +46,18 @@ for (const width of [320, 390, 768]) {
     if (width <= 540) expect(metrics.columns).toBe(1);
     await expect(page.getByLabel(/Bewilligtes Budget/)).toHaveAttribute("inputmode", "decimal");
     await expect(page.getByLabel("Genehmigungsjahr")).toHaveAttribute("inputmode", "numeric");
+    await page.getByLabel("CPI erklären").click();
+    await expect(page.getByText(/Der CPI beschreibt/)).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    await page.getByLabel("CPI erklären").click();
+    await expect(page.getByText(/Der CPI beschreibt/)).toBeHidden();
     await page.getByRole("button", { name: "Beispiel prüfen" }).click();
     await expect(page.getByRole("heading", { name: "Prüfergebnis" })).toBeVisible();
-    await page.getByRole("link", { name: "Zum Ergebnis" }).click();
-    await expect(page.getByRole("heading", { name: "Prüfergebnis" })).toBeFocused();
+    await expect(page.getByRole("link", { name: "Zum Ergebnis" })).toHaveCount(0);
+    await page.getByText("Modellstand und Aussagegrenzen", { exact: true }).click();
+    await expect(page.getByText(/Version: demo-fixture-v1/)).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
@@ -76,7 +84,11 @@ test("200 percent CSS zoom preserves reflow and keyboard focus", async ({ page }
       .evaluate((button) => getComputedStyle(button).transitionDuration),
   ).toBe("0s");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await page.getByRole("link", { name: "Zum Ergebnis" }).focus();
+  const cpiHelp = page.getByLabel("CPI erklären");
+  await cpiHelp.focus();
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("heading", { name: "Prüfergebnis" })).toBeFocused();
+  await expect(page.getByText(/Der CPI beschreibt/)).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByText(/Der CPI beschreibt/)).toBeHidden();
+  await expect(cpiHelp).toBeFocused();
 });

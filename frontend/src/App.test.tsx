@@ -42,12 +42,41 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("project screening", () => {
-  it("explains fixed demo values before submission and identifies example inputs", async () => {
+  it("explains fixed demo values without repeating form guidance", async () => {
     render(<App />);
     expect(await screen.findByText(/64 % und \+18 % sind feste Beispielwerte/)).toBeVisible();
-    expect(screen.getByText(/Vorgefüllte Daten sind ein Beispielprojekt/)).toBeVisible();
+    expect(
+      screen.queryByText(/Vorgefüllte Daten sind ein Beispielprojekt/),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Eingaben werden nicht gespeichert.")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Beispiel prüfen" })).toBeEnabled();
     expect(screen.queryByText("Prüfergebnis")).not.toBeInTheDocument();
+  });
+  it("labels model output once and keeps the result handoff visually quiet", async () => {
+    vi.mocked(fetch).mockImplementation(
+      async (url) =>
+        new Response(
+          JSON.stringify(
+            String(url).endsWith("model-info")
+              ? { ...info, mode: "model" }
+              : String(url).endsWith("options")
+                ? options
+                : String(url).includes("cpi-reference")
+                  ? prediction.cpi
+                  : { ...prediction, mode: "model" },
+          ),
+        ),
+    );
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole("button", { name: "Projekt prüfen" }));
+    await screen.findByRole("heading", { name: "Prüfergebnis" });
+    expect(screen.getAllByText("Modellschätzung")).toHaveLength(1);
+    expect(screen.queryByRole("link", { name: "Zum Ergebnis" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Prüfung abgeschlossen. Das Ergebnis ist verfügbar."),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("Ergebnis aktualisiert.")).toHaveClass("sr-only");
   });
   it("keeps the form and results prominent with context below and no decorative navigation", async () => {
     render(<App />);

@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import App from "./App";
 import CpiField from "./CpiField";
@@ -27,6 +28,21 @@ beforeEach(() =>
   ),
 );
 afterEach(() => vi.unstubAllGlobals());
+
+it("opens CPI help on click and closes with Escape", async () => {
+  const user = userEvent.setup();
+  render(<CpiField country="Kenya" year={2024} month={12} />);
+  const help = screen.getByText(/Der CPI beschreibt/);
+  const toggle = screen.getByLabelText("CPI erklären");
+  expect(help).not.toBeVisible();
+  await user.click(toggle);
+  expect(help).toBeVisible();
+  await user.keyboard("{Escape}");
+  expect(help).not.toBeVisible();
+  expect(toggle).toHaveFocus();
+  await user.click(toggle);
+  expect(help).toBeVisible();
+});
 
 it.each([
   ["Empfängerland", "Germany", "Empfängerland"],

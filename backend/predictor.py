@@ -274,8 +274,8 @@ class Predictor:
                             "Risikonachweis."
                         ),
                         next_step=(
-                            "Modellkarte und zeitlich passende Validierung prüfen; ohne "
-                            "Nachweis Schätzung nicht als Entscheidungsgrundlage verwenden."
+                            "Zeitlich passende Validierung und Modellkarte vor der "
+                            "fachlichen Verwendung prüfen."
                         ),
                     )
                 )
@@ -299,8 +299,8 @@ class Predictor:
                             "Übertragbarkeit nicht nachgewiesen; keine Aussage über Fehlverhalten."
                         ),
                         next_step=(
-                            "Modellkarte und Validierung für diese Budgetgröße prüfen; bei "
-                            "fehlendem Nachweis fachlich separat bewerten."
+                            "Validierung für diese Budgetgröße und Modellkarte vor der "
+                            "fachlichen Verwendung prüfen."
                         ),
                     )
                 )

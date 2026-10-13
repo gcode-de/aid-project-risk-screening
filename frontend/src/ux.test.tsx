@@ -59,8 +59,8 @@ it("hands off running, completed and changed states without stealing focus", asy
   finish(setupResponse("predict"));
   await screen.findByRole("heading", { name: "Prüfergebnis" });
   expect(screen.getByRole("heading", { name: "Prüfergebnis" })).not.toHaveFocus();
-  await user.click(screen.getByRole("link", { name: "Zum Ergebnis" }));
-  expect(screen.getByRole("heading", { name: "Prüfergebnis" })).toHaveFocus();
+  expect(screen.queryByRole("link", { name: "Zum Ergebnis" })).not.toBeInTheDocument();
+  expect(screen.getByText("Ergebnis aktualisiert.")).toHaveClass("sr-only");
   fireEvent.change(screen.getByLabelText(/Bewilligtes Budget/), { target: { value: "600000" } });
   expect(screen.getByRole("region", { name: "Eingaben geändert" })).toHaveTextContent(
     "erneut prüfen",
@@ -120,9 +120,7 @@ it("recovers from a network failure with preserved inputs and explicit retry", a
   vi.mocked(fetch).mockImplementation(async (url) => setupResponse(url));
   await user.click(screen.getByRole("button", { name: "Prüfung wiederholen" }));
   expect(await screen.findByRole("heading", { name: "Prüfergebnis" })).toBeVisible();
-  await waitFor(() =>
-    expect(screen.getByText("Prüfung abgeschlossen. Das Ergebnis ist verfügbar.")).toBeVisible(),
-  );
+  await waitFor(() => expect(screen.getByText("Ergebnis aktualisiert.")).toHaveClass("sr-only"));
 });
 
 it.each([

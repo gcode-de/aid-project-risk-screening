@@ -70,38 +70,36 @@ export default function ResultPanel({
       )}
       {project && (
         <section className="input-summary" aria-label="Eingegebene Grundlage">
-          <h3>Eingegebene Grundlage</h3>
-          <dl>
-            <dt>Empfängerland</dt>
-            <dd>{project.country}</dd>
-            <dt>Sektor</dt>
-            <dd>
-              {sectors[project.sector_code] ?? "Sektorcode"} ({project.sector_code})
-            </dd>
-            <dt>Bewilligtes Budget</dt>
-            <dd>{new Intl.NumberFormat("de-DE").format(project.initial_budget_usd)} USD</dd>
-            <dt>Genehmigung</dt>
-            <dd>
-              {new Intl.DateTimeFormat("de-DE", {
-                month: "long",
-                year: "numeric",
-                timeZone: "UTC",
-              }).format(new Date(Date.UTC(project.approval_year, project.approval_month - 1, 1)))}
-            </dd>
-            <dt>Verwendeter CPI (0–100)</dt>
-            <dd>{cpi}</dd>
-          </dl>
+          <details>
+            <summary>Eingegebene Grundlage</summary>
+            <dl>
+              <dt>Empfängerland</dt>
+              <dd>{project.country}</dd>
+              <dt>Sektor</dt>
+              <dd>
+                {sectors[project.sector_code] ?? "Sektorcode"} ({project.sector_code})
+              </dd>
+              <dt>Bewilligtes Budget</dt>
+              <dd>{new Intl.NumberFormat("de-DE").format(project.initial_budget_usd)} USD</dd>
+              <dt>Genehmigung</dt>
+              <dd>
+                {new Intl.DateTimeFormat("de-DE", {
+                  month: "long",
+                  year: "numeric",
+                  timeZone: "UTC",
+                }).format(new Date(Date.UTC(project.approval_year, project.approval_month - 1, 1)))}
+              </dd>
+              <dt>Verwendeter CPI (0–100)</dt>
+              <dd>{cpi}</dd>
+            </dl>
+          </details>
         </section>
       )}
       <div className="metric-grid">
         <div className="metric">
           <p>Erfolgswahrscheinlichkeit</p>
           <strong>{percent.format(result.estimates.success_probability)}</strong>
-          <span>
-            {result.mode === "demo"
-              ? "Illustrativer Beispielwert"
-              : "Wahrscheinlichkeit für das Erfolgslabel des eingebundenen Modells"}
-          </span>
+          {result.mode === "demo" && <span>Illustrativer Beispielwert</span>}
         </div>
         <div className="metric">
           <p>Erwartete Kostenabweichung</p>
@@ -116,78 +114,84 @@ export default function ResultPanel({
         <span>{change >= 0 ? "Entsprechende Mehrkosten" : "Entsprechende Minderkosten"}</span>
         <strong>{dollars.format(Math.abs(result.expected_cost_change_usd))}</strong>
       </div>
-      <p className="help">
-        Kostenabweichung = (Endkosten − bewilligtes Budget) / bewilligtes Budget. Der Dollarbetrag
-        entspricht dieser Abweichung × bewilligtes Budget, nicht den Gesamtkosten.
-      </p>
-      <p className="help">
-        Unsicherheit / Konfidenzintervall: nicht verfügbar. Die Erfolgswahrscheinlichkeit ist kein
-        Gesamtrisikoscore.
-      </p>
-      {result.mode === "model" && (
-        <section className="model-context" aria-label="Modellgrundlage und Aussagegrenzen">
-          <h3>Modellgrundlage und Aussagegrenzen</h3>
-          <p>Version: {result.model_version}</p>
-          {info?.success_definition && info.evaluation_horizon ? (
-            <>
-              <p>Erfolgsdefinition: {info.success_definition}</p>
-              <p>Bewertungshorizont: {info.evaluation_horizon}</p>
-            </>
-          ) : (
-            <p>
-              Erfolgsdefinition und Bewertungshorizont: nicht verfügbar oder unvollständig. Vor
-              einer fachlichen Verwendung vom Modellverantwortlichen bestätigen lassen.
-            </p>
-          )}
-          {info?.model_card_url && /^https?:\/\//i.test(info.model_card_url) ? (
-            <a href={info.model_card_url} target="_blank" rel="noopener noreferrer">
-              Modellkarte öffnen
-            </a>
-          ) : (
-            <p>Modellkarte: nicht verfügbar.</p>
-          )}
-          <p>
-            Trainingszeitraum:{" "}
-            {info?.training_year_min != null && info.training_year_max != null
-              ? `${info.training_year_min}–${info.training_year_max}`
-              : "nicht verfügbar"}
-          </p>
-          {outsideYears && (
-            <p className="field-error">
-              Genehmigungsjahr außerhalb des Trainingszeitraums. Übertragbarkeit nicht nachgewiesen.
-            </p>
-          )}
-          <p>
-            Validierungskennzahlen (vom Backend geliefert, keine projektbezogene Sicherheit):{" "}
-            {info && Object.keys(info.metrics ?? {}).length
-              ? Object.entries(info.metrics ?? {})
-                  .map(([key, value]) => `${key}: ${number.format(value)}`)
-                  .join(" · ")
-              : "nicht verfügbar"}
-          </p>
-          <ul>
-            {Array.from(new Set([...result.limitations, ...(info?.limitations ?? [])])).map(
-              (item) => (
-                <li key={item}>{item}</li>
-              ),
-            )}
-          </ul>
-        </section>
-      )}
       <div className="notes-header">
         <h3>Prüfhinweise</h3>
         <span>Regelbasiert</span>
       </div>
-      <p className="help">
-        Diese Hinweise sind keine Erklärung der Modellgewichtung und kein Nachweis eines
-        Fehlverhaltens.
-      </p>
       {result.notes.length ? (
         <ul className="notes">
           {result.notes.map((note, index) => (
             <li key={note.code}>
               <span className="note-number">{String(index + 1).padStart(2, "0")}</span>
               <div>
+                <h4>{note.title}</h4>
+                <p>{note.next_step ?? note.detail}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="no-notes">Prüfregeln: unauffällig.</p>
+      )}
+      <details className="limitations">
+        <summary>Modellstand und Aussagegrenzen</summary>
+        <p>Version: {result.model_version}</p>
+        <p>Verwendeter CPI: {cpi}</p>
+        <p>Unsicherheit / Konfidenzintervall: nicht verfügbar.</p>
+        {result.mode === "model" && (
+          <>
+            {info?.success_definition && info.evaluation_horizon ? (
+              <>
+                <p>Erfolgsdefinition: {info.success_definition}</p>
+                <p>Bewertungshorizont: {info.evaluation_horizon}</p>
+              </>
+            ) : (
+              <p>
+                Erfolgsdefinition und Bewertungshorizont: nicht verfügbar oder unvollständig. Vor
+                einer fachlichen Verwendung vom Modellverantwortlichen bestätigen lassen.
+              </p>
+            )}
+            {info?.model_card_url && /^https?:\/\//i.test(info.model_card_url) ? (
+              <a href={info.model_card_url} target="_blank" rel="noopener noreferrer">
+                Modellkarte öffnen
+              </a>
+            ) : (
+              <p>Modellkarte: nicht verfügbar.</p>
+            )}
+            <p>
+              Trainingszeitraum:{" "}
+              {info?.training_year_min != null && info.training_year_max != null
+                ? `${info.training_year_min}–${info.training_year_max}`
+                : "nicht verfügbar"}
+            </p>
+            {outsideYears && (
+              <p className="field-error">
+                Genehmigungsjahr außerhalb des Trainingszeitraums. Übertragbarkeit nicht
+                nachgewiesen.
+              </p>
+            )}
+            <p>
+              Validierungskennzahlen (vom Backend geliefert, keine projektbezogene Sicherheit):{" "}
+              {info && Object.keys(info.metrics ?? {}).length
+                ? Object.entries(info.metrics ?? {})
+                    .map(([key, value]) => `${key}: ${number.format(value)}`)
+                    .join(" · ")
+                : "nicht verfügbar"}
+            </p>
+            <ul>
+              {Array.from(new Set([...result.limitations, ...(info?.limitations ?? [])])).map(
+                (item) => (
+                  <li key={item}>{item}</li>
+                ),
+              )}
+            </ul>
+          </>
+        )}
+        {result.notes.length > 0 && (
+          <section aria-label="Regelgrundlagen">
+            <h3>Regelgrundlagen</h3>
+            {result.notes.map((note) => (
+              <div key={note.code}>
                 <h4>{note.title}</h4>
                 <dl className="rule-detail">
                   <dt>Auslöser</dt>
@@ -202,30 +206,18 @@ export default function ResultPanel({
                     {note.limits ??
                       "Kein Nachweis von Fehlverhalten; keine Erklärung der Modellgewichtung."}
                   </dd>
-                  <dt>Nächster Prüfschritt</dt>
-                  <dd>
-                    {note.next_step ??
-                      "Regelbeschreibung mit den Projektunterlagen abgleichen; fehlende Nachweise dokumentieren."}
-                  </dd>
                 </dl>
               </div>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="no-notes">
-          Keine der hinterlegten Prüfregeln trifft zu. Das ist keine Unbedenklichkeitsbescheinigung.
-        </p>
-      )}
-      <details className="limitations">
-        <summary>Modellstand und Aussagegrenzen</summary>
-        <p>Version: {result.model_version}</p>
-        <p>Verwendeter CPI: {cpi}</p>
-        <ul>
-          {result.limitations.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
+            ))}
+          </section>
+        )}
+        {result.mode !== "model" && (
+          <ul>
+            {result.limitations.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        )}
       </details>
     </section>
   );

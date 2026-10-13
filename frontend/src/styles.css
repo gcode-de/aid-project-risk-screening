@@ -818,6 +818,21 @@ h1 {
   border: 1px solid #dce3d8;
   border-radius: 8px;
 }
+.input-summary {
+  margin: 0 0 16px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.input-summary summary {
+  min-height: 44px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.note-number {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
 .input-summary dl,
 .rule-detail {
   margin: 12px 0;
@@ -831,6 +846,52 @@ h1 {
 .input-summary dd,
 .rule-detail dd {
   margin: 2px 0 0;
+}
+.cpi-field {
+  position: relative;
+}
+.cpi-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cpi-help summary {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  list-style: none;
+  color: #254f43;
+  border-radius: 6px;
+}
+.cpi-help summary::-webkit-details-marker {
+  display: none;
+}
+.cpi-help summary span {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: 14px;
+}
+.cpi-help summary:hover,
+.cpi-help[open] summary {
+  background: #eef3eb;
+}
+.cpi-help .help {
+  position: absolute;
+  z-index: 2;
+  top: 44px;
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid #dce3d8;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 4px 16px #2037331a;
 }
 .field-error,
 .error-summary {

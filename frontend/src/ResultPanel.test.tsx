@@ -1,4 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { expect, it } from "vitest";
 import type { ModelInfo, Prediction, ProjectInput } from "./api";
 import ResultPanel from "./ResultPanel";
@@ -31,7 +32,7 @@ const info: ModelInfo = {
   limitations: ["Test-only measured limitation."],
 };
 
-it("ties results to the submitted input and visible CPI provenance", () => {
+it("ties results to submitted input and shows uncertainty on request", async () => {
   render(
     <ResultPanel
       result={result}
@@ -41,6 +42,8 @@ it("ties results to the submitted input and visible CPI provenance", () => {
     />,
   );
   const summary = screen.getByRole("region", { name: "Eingegebene Grundlage" });
+  expect(within(summary).getByText("Kenya")).not.toBeVisible();
+  await userEvent.click(within(summary).getByText("Eingegebene Grundlage"));
   for (const value of [
     "Kenya",
     "Infrastruktur (12230)",
@@ -51,13 +54,20 @@ it("ties results to the submitted input and visible CPI provenance", () => {
     expect(within(summary).getByText(value)).toBeVisible();
   }
   expect(
-    screen.getByText(/\(Endkosten − bewilligtes Budget\) \/ bewilligtes Budget/),
-  ).toBeVisible();
+    screen.queryByText(/\(Endkosten − bewilligtes Budget\) \/ bewilligtes Budget/),
+  ).not.toBeInTheDocument();
+  expect(screen.getByText(/Unsicherheit.*nicht verfügbar/)).not.toBeVisible();
+  await userEvent.click(screen.getByText("Modellstand und Aussagegrenzen"));
   expect(screen.getByText(/Unsicherheit.*nicht verfügbar/)).toBeVisible();
 });
 
-it("keeps real-model coverage and absent definitions honest and visible", () => {
+it("keeps real-model coverage and definitions available in the disclosure", async () => {
   render(<ResultPanel result={{ ...result, mode: "model" }} project={project} info={info} />);
+  expect(screen.getByText(/Trainingszeitraum: 2005–2022/)).not.toBeVisible();
+  expect(
+    screen.queryByText("Wahrscheinlichkeit für das Erfolgslabel des eingebundenen Modells"),
+  ).not.toBeInTheDocument();
+  await userEvent.click(screen.getByText("Modellstand und Aussagegrenzen"));
   expect(screen.getByText(/Trainingszeitraum: 2005–2022/)).toBeVisible();
   expect(screen.getByText(/Genehmigungsjahr außerhalb/)).toBeVisible();
   expect(
@@ -68,7 +78,7 @@ it("keeps real-model coverage and absent definitions honest and visible", () => 
   expect(screen.getByText("Test-only measured limitation.")).toBeVisible();
 });
 
-it("shows server-supplied approved metadata without invented validation or unsafe links", () => {
+it("shows server-supplied approved metadata on request", async () => {
   render(
     <ResultPanel
       result={{ ...result, mode: "model" }}
@@ -81,6 +91,7 @@ it("shows server-supplied approved metadata without invented validation or unsaf
       }}
     />,
   );
+  await userEvent.click(screen.getByText("Modellstand und Aussagegrenzen"));
   expect(screen.getByText(/Approved test label/)).toBeVisible();
   expect(screen.getByText(/Approved test horizon/)).toBeVisible();
   expect(screen.getByRole("link", { name: "Modellkarte öffnen" })).toHaveAttribute(
@@ -89,7 +100,7 @@ it("shows server-supplied approved metadata without invented validation or unsaf
   );
 });
 
-it("renders the stale-CPI note captured from the synthetic FastAPI response", () => {
+it("shows the stale-CPI action first and makes its rule context available", async () => {
   // TestClient: Kenya, reference 2020, approval December 2024, dummy model.
   const note = {
     code: "stale-cpi",
@@ -120,13 +131,16 @@ it("renders the stale-CPI note captured from the synthetic FastAPI response", ()
       info={info}
     />,
   );
+  expect(screen.getByText(note.next_step)).toBeVisible();
+  expect(screen.getByText(note.trigger)).not.toBeVisible();
+  await userEvent.click(screen.getByText("Modellstand und Aussagegrenzen"));
   for (const text of [note.trigger, note.meaning, note.limits, note.next_step]) {
     expect(screen.getByText(text)).toBeVisible();
   }
   expect(screen.queryByText(/Auslöser nicht von der API geliefert/)).not.toBeInTheDocument();
 });
 
-it("renders structured rule evidence and a legacy fallback without inventing triggers", () => {
+it("keeps review actions concise and retains structured and legacy rule context", async () => {
   render(
     <ResultPanel
       result={{
@@ -147,12 +161,16 @@ it("renders structured rule evidence and a legacy fallback without inventing tri
       project={project}
     />,
   );
+  expect(screen.getByText("Exact input")).not.toBeVisible();
+  expect(screen.getByText("Check document")).toBeVisible();
+  expect(screen.getByText("Legacy-only detail", { selector: "p" })).toBeVisible();
+  await userEvent.click(screen.getByText("Modellstand und Aussagegrenzen"));
   expect(screen.getByText("Exact input")).toBeVisible();
   expect(screen.getByText("Check document")).toBeVisible();
   expect(screen.getByText("No evidence of misconduct")).toBeVisible();
   expect(screen.getByText(/Auslöser nicht von der API geliefert/)).toBeVisible();
-  expect(screen.getByText("Legacy-only detail")).toBeVisible();
+  expect(screen.getByText("Legacy-only detail", { selector: "dd" })).toBeVisible();
   expect(
-    screen.getByText(/Diese Hinweise sind keine Erklärung der Modellgewichtung/),
-  ).toBeVisible();
+    screen.queryByText(/Diese Hinweise sind keine Erklärung der Modellgewichtung/),
+  ).not.toBeInTheDocument();
 });

@@ -41,3 +41,9 @@ and push. No source dataset or assessment document is published.
     interpretation guidance. Keep fixture output labelled while running demo mode; real
     model outputs have no demo notice. Document export, local verification and the concrete
     read-only model mount in LXC 114. Verification: frontend tests, build and browser flows.
+11. **Concise review UI** — remove duplicate model labels, example-input and storage copy,
+    visible completion text, result navigation, cost formula and redundant success-label text.
+    Keep screen-reader announcements and validation/retry behavior. Show review titles and
+    next actions; collect model metadata and rule context in one disclosure. CPI help opens
+    on click, touch or keyboard and closes with Escape. Verification: component behavior,
+    desktop/mobile reflow, keyboard operation and accessibility checks; backend contract tests.

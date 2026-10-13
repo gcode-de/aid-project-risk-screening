@@ -56,7 +56,27 @@ export default function CpiField({
   return (
     <div className="wide cpi-field">
       <input type="hidden" name="cpi_mode" value={manual ? "manual" : "auto"} />
-      <p className="cpi-title">CPI · Länderreferenz</p>
+      <div className="cpi-heading">
+        <p className="cpi-title">CPI · Länderreferenz</p>
+        <details
+          className="cpi-help"
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.currentTarget.open = false;
+              event.currentTarget.querySelector("summary")?.focus();
+            }
+          }}
+        >
+          <summary aria-label="CPI erklären">
+            <span aria-hidden="true">i</span>
+          </summary>
+          <p id="cpi-help" className="help">
+            Der CPI beschreibt die wahrgenommene Korruption im öffentlichen Sektor eines Landes.
+            Höhere Werte stehen für weniger wahrgenommene Korruption. Automatische Referenzen
+            stammen aus Veröffentlichungen vor dem Genehmigungsmonat.
+          </p>
+        </details>
+      </div>
       <p className="help" role="status">
         {resetMessage}
       </p>
@@ -107,11 +127,6 @@ export default function CpiField({
           Bitte einen CPI-Wert zwischen 0 und 100 eingeben.
         </p>
       )}
-      <p id="cpi-help" className="help">
-        Korruptionswahrnehmungsindex: höhere Werte bedeuten weniger wahrgenommene Korruption. Kein
-        Urteil über ein einzelnes Projekt. Automatisch werden nur vor dem Genehmigungsmonat
-        verfügbare Referenzen genutzt.
-      </p>
     </div>
   );
 }

@@ -76,9 +76,6 @@ export default function ProjectForm({
         });
       }}
     >
-      <p className="help">
-        Vorgefüllte Daten sind ein Beispielprojekt. Bitte durch eigene Projektdaten ersetzen.
-      </p>
       <fieldset disabled={busy || !ready}>
         <legend className="sr-only">Projektdaten</legend>
         <div className="fields">
@@ -213,7 +210,6 @@ export default function ProjectForm({
           </svg>
         </button>
       </fieldset>
-      <p className="form-footnote">Eingaben werden nicht gespeichert.</p>
     </form>
   );
 }

@@ -75,13 +75,9 @@ export default function App() {
       <main id="main">
         <div className="page-title">
           <h1>Projektprüfung</h1>
-          {setup && (
+          {setup && setup.info.mode !== "model" && (
             <span className="badge">
-              {setup.info.mode === "model"
-                ? "Modellschätzung"
-                : setup.info.mode === "demo"
-                  ? "Demo · feste Werte"
-                  : "Nicht verfügbar"}
+              {setup.info.mode === "demo" ? "Demo · feste Werte" : "Nicht verfügbar"}
             </span>
           )}
         </div>
@@ -151,25 +147,15 @@ export default function App() {
                   </button>
                 </div>
               )}
-              <p role="status">
+              <p role="status" className="sr-only">
                 {busy
                   ? "Prüfung läuft. Bitte warten …"
                   : result
-                    ? "Prüfung abgeschlossen. Das Ergebnis ist verfügbar."
+                    ? "Ergebnis aktualisiert."
                     : changed
                       ? "Eingaben geändert. Bitte erneut prüfen."
                       : ""}
               </p>
-              {result && (
-                // biome-ignore lint/a11y/useValidAnchor: Real fragment navigation; handler additionally focuses its heading for keyboard users.
-                <a
-                  className="result-link"
-                  href="#result-heading"
-                  onClick={() => document.getElementById("result-heading")?.focus()}
-                >
-                  Zum Ergebnis
-                </a>
-              )}
             </section>
             <div aria-busy={busy}>
               <ResultPanel
@@ -186,8 +172,8 @@ export default function App() {
           <section className="context-info" aria-label="Einordnung">
             <h2>Einordnung</h2>
             <p>
-              Die Schätzungen unterstützen die fachliche Prüfung. Prüfhinweise dienen zur
-              Priorisierung und belegen kein Fehlverhalten.
+              Die Schätzungen unterstützen die fachliche Prüfung. Prüfhinweise helfen, die nächsten
+              Schritte zu priorisieren.
             </p>
           </section>
         )}
